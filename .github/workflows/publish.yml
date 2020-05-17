@@ -18,6 +18,11 @@ jobs:
          CI: false # don't let react regard warnings as errors
          PUBLIC_URL: /canokey-web-console
 
+      - name: Duplicate index.html
+        run: |
+          cp build/index.html build/apdu.html
+          cp build/index.html build/admin.html
+
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
