@@ -54,7 +54,7 @@ export default function Overview() {
     if (!res.endsWith("9000")) {
       throw 'Selecting admin applet failed';
     }
-  }, [device]);
+  }, [device, dispatch]);
 
   const adminTransceive = useCallback(async (capdu, success_msg, failed_msg, secret) => {
     try {
@@ -76,7 +76,7 @@ export default function Overview() {
       setShowSnackbar(true);
     }
     return false;
-  }, [device]);
+  }, [dispatch, selectAdminApplet]);
 
   const doAuthenticate = useCallback(async () => {
     setPinDialogOpen(false);
@@ -84,15 +84,23 @@ export default function Overview() {
     let len = new Uint8Array([array.length]);
     setAuthenticated(await adminTransceive(`00200000${byteToHexString(len)}${byteToHexString(array)}`,
       'PIN verification success', 'PIN verification failed', true));
-  }, [device, pin]);
+  }, [pin, adminTransceive]);
 
   const setLedOn = useCallback(async () => {
     await adminTransceive("00400101", "LED is on", "Set LED status failed");
-  }, [device]);
+  }, [adminTransceive]);
 
   const setLedOff = useCallback(async () => {
     await adminTransceive("00400100", "LED is off", "Set LED status failed");
-  }, [device]);
+  }, [adminTransceive]);
+
+  const setHotpOn = useCallback(async () => {
+    await adminTransceive("00400301", "HOTP on touch is on", "Set HOTP status failed");
+  }, [adminTransceive]);
+
+  const setHotpOff = useCallback(async () => {
+    await adminTransceive("00400301", "HOTP on touch is off", "Set HOTP status failed");
+  }, [adminTransceive]);
 
   return (
     <div className={classes.root}>
@@ -122,6 +130,11 @@ export default function Overview() {
                 LED:
                 <Button onClick={setLedOn}>ON</Button>
                 <Button onClick={setLedOff}>OFF</Button>
+              </Typography>
+              <Typography>
+                HOTP on touch:
+                <Button onClick={setHotpOn}>ON</Button>
+                <Button onClick={setHotpOff}>OFF</Button>
               </Typography>
             </CardContent>
           </Card> : null
