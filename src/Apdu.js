@@ -8,7 +8,8 @@ import TextField from "@material-ui/core/TextField";
 import Grid from "@material-ui/core/Grid";
 import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
-import {transceive} from "./actions";
+import {connect, transceive} from "./actions";
+import {useSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -159,12 +160,24 @@ export default function Apdu() {
   const dispatch = useDispatch();
   const [apdu, setApdu] = useState('');
   const [resp, setResp] = useState('');
+  const {enqueueSnackbar} = useSnackbar();
 
   let {parsedApdu, error, errorMsg} = verifyApdu(apdu);
 
   const sendApdu = useCallback(async () => {
-    let capdu = apdu.replace(/\s/g, '');
-    setResp(await dispatch(transceive(capdu)));
+    try {
+      if (device === null) {
+        if (!await dispatch(connect())) {
+          throw 'Cannot connect to Canokey';
+        }
+      }
+
+      let capdu = apdu.replace(/\s/g, '');
+      setResp(await dispatch(transceive(capdu)));
+      enqueueSnackbar('Command APDU sent', {variant: 'success'});
+    } catch (err) {
+      enqueueSnackbar(err, {variant: 'error'});
+    }
   }, [device, apdu]);
 
   return (

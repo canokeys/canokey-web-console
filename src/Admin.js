@@ -16,6 +16,7 @@ import DialogActions from "@material-ui/core/DialogActions";
 import {connect, transceive} from "./actions";
 import {byteToHexString} from "./util";
 import Snackbar from "@material-ui/core/Snackbar";
+import {useSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -35,9 +36,7 @@ export default function Overview() {
   const [authenticated, setAuthenticated] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [snackbarMsg, setSnackbarMsg] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const {enqueueSnackbar} = useSnackbar();
 
   const onAuthenticate = useCallback(() => {
     setPinDialogOpen(true);
@@ -61,19 +60,13 @@ export default function Overview() {
       await selectAdminApplet();
       let res = await dispatch(transceive(capdu, secret));
       if (res.endsWith("9000")) {
-        setSnackbarMsg(success_msg);
-        setSnackbarSeverity('success');
-        setShowSnackbar(true);
+        enqueueSnackbar(success_msg, {variant: 'success'});
         return true;
       } else {
-        setSnackbarMsg(failed_msg);
-        setSnackbarSeverity('success');
-        setShowSnackbar(true);
+        enqueueSnackbar(failed_msg, {variant: 'error'});
       }
     } catch (err) {
-      setSnackbarMsg(err);
-      setSnackbarSeverity('error');
-      setShowSnackbar(true);
+      enqueueSnackbar(err, {variant: 'error'});
     }
     return false;
   }, [dispatch, selectAdminApplet]);
@@ -157,11 +150,6 @@ export default function Overview() {
           </Button>
         </DialogActions>
       </Dialog>
-      <Snackbar open={showSnackbar} autoHideDuration={5000} onClose={() => setShowSnackbar(false)}>
-        <Alert severity={snackbarSeverity} onClose={() => setShowSnackbar(false)}>
-          {snackbarMsg}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }
