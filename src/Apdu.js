@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import {useDispatch, useSelector} from "react-redux";
 import Card from "@material-ui/core/Card";
@@ -6,6 +6,9 @@ import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
 import TextField from "@material-ui/core/TextField";
 import Grid from "@material-ui/core/Grid";
+import CardActions from "@material-ui/core/CardActions";
+import Button from "@material-ui/core/Button";
+import {transceive} from "./actions";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -155,8 +158,14 @@ export default function Apdu() {
   const device = useSelector(state => state.device);
   const dispatch = useDispatch();
   const [apdu, setApdu] = useState('');
+  const [resp, setResp] = useState('');
 
   let {parsedApdu, error, errorMsg} = verifyApdu(apdu);
+
+  const sendApdu = useCallback(async () => {
+    let capdu = apdu.replace(/\s/g, '');
+    setResp(await dispatch(transceive(capdu)));
+  }, [device, apdu]);
 
   return (
     <div className={classes.root}>
@@ -200,7 +209,18 @@ export default function Apdu() {
                     </Typography>
                   </div> : null
               }
+              {
+                resp ?
+                  <Typography>
+                    Resp: {resp}
+                  </Typography> : null
+              }
             </CardContent>
+            <CardActions>
+              <Button onClick={sendApdu}>
+                Send
+              </Button>
+            </CardActions>
           </Card>
         </Grid>
       </Grid>
