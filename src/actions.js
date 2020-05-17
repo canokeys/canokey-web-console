@@ -27,3 +27,10 @@ export function connect() {
         }
     };
 }
+
+export function disconnect() {
+    return {
+        type: TYPES.SET_DEVICE,
+        device: null
+    }
+}
