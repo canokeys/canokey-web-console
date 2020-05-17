@@ -10,9 +10,11 @@ import AppsIcon from '@material-ui/icons/Apps';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
+import SyncAltIcon from '@material-ui/icons/SyncAlt';
 import { connect, disconnect } from './actions';
 import Overview from './Overview';
 import Admin from "./Admin";
+import Apdu from "./Apdu";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,6 +50,11 @@ export default function App() {
   const showAdmin = useCallback(e => {
     setDrawerOpen(false);
     history.push('/admin');
+  }, [history]);
+
+  const showAPDU = useCallback(e => {
+    setDrawerOpen(false);
+    history.push('/apdu');
   }, [history]);
 
   return (
@@ -110,12 +117,17 @@ export default function App() {
               </ListItem>
             </List>
           </Collapse>
+          <ListItem button onClick={showAPDU}>
+            <ListItemIcon><SyncAltIcon /></ListItemIcon>
+            <ListItemText>APDU Console & History</ListItemText>
+          </ListItem>
         </List>
       </Drawer>
 
       <Switch>
         <Route path="/" exact component={Overview} />
         <Route path="/admin" exact component={Admin} />
+        <Route path="/apdu" exact component={Apdu} />
       </Switch>
     </div>
   );
