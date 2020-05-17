@@ -83,12 +83,16 @@ async function transceive_webusb(device, capdu) {
   return '';
 }
 
-export function transceive(capdu) {
+export function transceive(capdu, is_secret) {
   return async (dispatch, getState) => {
     const {device} = getState();
     try {
       let res = await transceive_webusb(device, capdu);
-      dispatch(appendAPDULog(capdu, res));
+      if (is_secret) {
+        dispatch(appendAPDULog('REDACTED', res));
+      } else {
+        dispatch(appendAPDULog(capdu, res));
+      }
       return res;
     } catch (err) {
       console.log(err);

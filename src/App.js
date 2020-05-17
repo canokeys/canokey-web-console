@@ -12,6 +12,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import { connect, disconnect } from './actions';
 import Overview from './Overview';
+import Admin from "./Admin";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -114,6 +115,7 @@ export default function App() {
 
       <Switch>
         <Route path="/" exact component={Overview} />
+        <Route path="/admin" exact component={Admin} />
       </Switch>
     </div>
   );
