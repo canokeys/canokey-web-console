@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import logo from './logo.png';
-import { Toolbar, AppBar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider, Button } from '@material-ui/core';
+import { Toolbar, AppBar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider, Button,  } from '@material-ui/core';
+import { Route, Switch } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import MenuIcon from '@material-ui/icons/Menu';
+import HomeIcon from '@material-ui/icons/Home';
 import { connect, disconnect } from './actions';
+import Overview from './Overview';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -21,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function App() {
+export default function App() {
   const classes = useStyles();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const dispatch = useDispatch();
@@ -55,6 +58,10 @@ function App() {
         <List>
           <Divider />
           <ListItem button>
+            <ListItemIcon><HomeIcon /></ListItemIcon>
+            <ListItemText>Overview</ListItemText>
+          </ListItem>
+          <ListItem button>
             <ListItemIcon><MenuIcon /></ListItemIcon>
             <ListItemText>Admin</ListItemText>
           </ListItem>
@@ -76,8 +83,10 @@ function App() {
           </ListItem>
         </List>
       </Drawer>
+
+      <Switch>
+        <Route path="/" exact component={Overview}/>
+      </Switch>
     </div>
   );
 }
-
-export default App;

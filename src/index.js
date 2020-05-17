@@ -8,6 +8,7 @@ import logger from 'redux-logger';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import * as reducers from './reducers';
+import { BrowserRouter } from 'react-router-dom';
 
 let middleware = [thunk];
 if (process.env.NODE_ENV !== 'production') {
@@ -18,7 +19,9 @@ const store = createStore(combineReducers(reducers), applyMiddleware(...middlewa
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <BrowserRouter basename={process.env.PUBLIC_URL}>
+        <App />
+      </BrowserRouter>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')
