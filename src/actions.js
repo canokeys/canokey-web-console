@@ -14,20 +14,18 @@ export function setDevice(device) {
 
 export function connect() {
   return async dispatch => {
-    try {
-      let device = await navigator.usb.requestDevice({
-        filters: [{
-          classCode: 0xFF, // vendor specific
-        }]
-      });
-      if (device !== undefined) {
-        await device.open();
-        await device.claimInterface(1);
-        dispatch(setDevice(device));
-      }
-    } catch (err) {
-      console.log(err);
+    let device = await navigator.usb.requestDevice({
+      filters: [{
+        classCode: 0xFF, // vendor specific
+      }]
+    });
+    if (device !== undefined) {
+      await device.open();
+      await device.claimInterface(1);
+      dispatch(setDevice(device));
+      return true;
     }
+    return false;
   };
 }
 

@@ -10,10 +10,12 @@ import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
+import Alert from "@material-ui/core/DialogContentText";
 import TextField from "@material-ui/core/TextField";
 import DialogActions from "@material-ui/core/DialogActions";
-import {transceive} from "./actions";
+import {connect, transceive} from "./actions";
 import {byteToHexString} from "./util";
+import Snackbar from "@material-ui/core/Snackbar";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -33,49 +35,63 @@ export default function Overview() {
   const [authenticated, setAuthenticated] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const onAuthenticate = useCallback(() => {
     setPinDialogOpen(true);
   }, []);
 
-  const doAuthenticate = useCallback(async () => {
-    setPinDialogOpen(false);
-    if (device !== null) {
-      let res = await dispatch(transceive("00A4040005F000000000"));
-      if (!res.endsWith("9000")) {
-        return;
+  const selectAdminApplet = useCallback(async () => {
+    if (device === null) {
+      if (!await dispatch(connect())) {
+        throw 'Cannot connect to Canokey';
       }
-      let array = new TextEncoder().encode(pin);
-      let len = new Uint8Array([array.length]);
-      res = await dispatch(transceive(`00200000${byteToHexString(len)}${byteToHexString(array)}`, true));
-      if (res.endsWith("9000")) {
-        setAuthenticated(true);
-      }
-    } else {
-      console.log('device is not open');
     }
-  }, [device, pin]);
 
-  const setLedOn = useCallback(async () => {
-    if (device !== null) {
-      let res = await dispatch(transceive("00400101"));
-      if (res.endsWith("9000")) {
-        console.log('set led to on');
-      }
-    } else {
-      console.log('device is not open');
+    let res = await dispatch(transceive("00A4040005F000000000"));
+    if (!res.endsWith("9000")) {
+      throw 'Selecting admin applet failed';
     }
   }, [device]);
 
-  const setLedOff = useCallback(async () => {
-    if (device !== null) {
-      let res = await dispatch(transceive("00400100"));
+  const adminTransceive = useCallback(async (capdu, success_msg, failed_msg, secret) => {
+    try {
+      await selectAdminApplet();
+      let res = await dispatch(transceive(capdu, secret));
       if (res.endsWith("9000")) {
-        console.log('set led to on');
+        setSnackbarMsg(success_msg);
+        setSnackbarSeverity('success');
+        setShowSnackbar(true);
+        return true;
+      } else {
+        setSnackbarMsg(failed_msg);
+        setSnackbarSeverity('success');
+        setShowSnackbar(true);
       }
-    } else {
-      console.log('device is not open');
+    } catch (err) {
+      setSnackbarMsg(err);
+      setSnackbarSeverity('error');
+      setShowSnackbar(true);
     }
+    return false;
+  }, [device]);
+
+  const doAuthenticate = useCallback(async () => {
+    setPinDialogOpen(false);
+    let array = new TextEncoder().encode(pin);
+    let len = new Uint8Array([array.length]);
+    setAuthenticated(await adminTransceive(`00200000${byteToHexString(len)}${byteToHexString(array)}`,
+      'PIN verification success', 'PIN verification failed', true));
+  }, [device, pin]);
+
+  const setLedOn = useCallback(async () => {
+    await adminTransceive("00400101", "LED is on", "Set LED status failed");
+  }, [device]);
+
+  const setLedOff = useCallback(async () => {
+    await adminTransceive("00400100", "LED is off", "Set LED status failed");
   }, [device]);
 
   return (
@@ -128,6 +144,11 @@ export default function Overview() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar open={showSnackbar} autoHideDuration={5000} onClose={() => setShowSnackbar(false)}>
+        <Alert severity={snackbarSeverity} onClose={() => setShowSnackbar(false)}>
+          {snackbarMsg}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
