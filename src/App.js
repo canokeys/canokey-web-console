@@ -1,24 +1,65 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import logo from './logo.png';
+import { Toolbar, AppBar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider } from '@material-ui/core';
+import MenuIcon from '@material-ui/icons/Menu';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flexGrow: 1,
+  },
+  icon: {
+    paddingLeft: "20px",
+    paddingTop: "10px",
+    paddingBottom: "10px",
+    width: "70%",
+  },
+}));
 
 function App() {
+  const classes = useStyles();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className={classes.root}>
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => setDrawerOpen(true)}>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" >
+            CanoKey Web Console
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}>
+        <img src={logo} alt="logo" className={classes.icon}/>
+        <List>
+          <Divider/>
+          <ListItem button>
+            <ListItemIcon><MenuIcon /></ListItemIcon>
+            <ListItemText>Admin</ListItemText>
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><MenuIcon /></ListItemIcon>
+            <ListItemText>CTAP</ListItemText>
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><MenuIcon /></ListItemIcon>
+            <ListItemText>OATH</ListItemText>
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><MenuIcon /></ListItemIcon>
+            <ListItemText>OpenPGP</ListItemText>
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><MenuIcon /></ListItemIcon>
+            <ListItemText>PIV</ListItemText>
+          </ListItem>
+        </List>
+      </Drawer>
     </div>
   );
 }
