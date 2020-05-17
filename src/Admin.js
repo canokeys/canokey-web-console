@@ -42,6 +42,7 @@ export default function Overview() {
     setPinDialogOpen(true);
   }, []);
 
+
   const selectAdminApplet = useCallback(async () => {
     if (device === null) {
       if (!await dispatch(connect())) {
@@ -79,6 +80,12 @@ export default function Overview() {
       'PIN verification success', 'PIN verification failed', true));
   }, [pin, adminTransceive]);
 
+  const onKeyPress = useCallback(async (e) => {
+    if (e.key === 'Enter') {
+      await doAuthenticate();
+    }
+  }, [doAuthenticate]);
+
   const setLedOn = useCallback(async () => {
     await adminTransceive("00400101", "LED is on", "Set LED status failed");
   }, [adminTransceive]);
@@ -93,6 +100,18 @@ export default function Overview() {
 
   const setHotpOff = useCallback(async () => {
     await adminTransceive("00400301", "HOTP on touch is off", "Set HOTP status failed");
+  }, [adminTransceive]);
+
+  const resetOpenPGP = useCallback(async () => {
+    await adminTransceive("00030000", "Reset OpenPGP done", "Reset OpenPGP failed");
+  }, [adminTransceive]);
+
+  const resetPIV = useCallback(async () => {
+    await adminTransceive("00040000", "Reset PIV done", "Reset PIV failed");
+  }, [adminTransceive]);
+
+  const resetOATH = useCallback(async () => {
+    await adminTransceive("00050000", "Reset OATH done", "Reset OATH failed");
   }, [adminTransceive]);
 
   return (
@@ -114,23 +133,38 @@ export default function Overview() {
       </Card>
       {
         authenticated ?
-          <Card className={classes.card}>
-            <CardContent>
-              <Typography variant="h2">
-                Config
-              </Typography>
-              <Typography>
-                LED:
-                <Button onClick={setLedOn}>ON</Button>
-                <Button onClick={setLedOff}>OFF</Button>
-              </Typography>
-              <Typography>
-                HOTP on touch:
-                <Button onClick={setHotpOn}>ON</Button>
-                <Button onClick={setHotpOff}>OFF</Button>
-              </Typography>
-            </CardContent>
-          </Card> : null
+          <div>
+            <Card className={classes.card}>
+              <CardContent>
+                <Typography variant="h2">
+                  Config
+                </Typography>
+                <Typography>
+                  LED:
+                  <Button onClick={setLedOn}>ON</Button>
+                  <Button onClick={setLedOff}>OFF</Button>
+                </Typography>
+                <Typography>
+                  HOTP on touch:
+                  <Button onClick={setHotpOn}>ON</Button>
+                  <Button onClick={setHotpOff}>OFF</Button>
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card className={classes.card}>
+              <CardContent>
+                <Typography variant="h2">
+                  Reset Applet
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button onClick={resetOpenPGP}>Reset OpenPGP</Button>
+                <Button onClick={resetPIV}>Reset PIV</Button>
+                <Button onClick={resetOATH}>Reset OATH</Button>
+              </CardActions>
+            </Card>
+          </div>
+        : null
       }
       <Dialog open={pinDialogOpen} onClose={() => setPinDialogOpen(false)}>
         <DialogTitle> Enter PIN to Authenticate Admin Applet</DialogTitle>
@@ -142,6 +176,7 @@ export default function Overview() {
             type="password"
             autoFocus
             fullWidth
+            onKeyPress={onKeyPress}
             onChange={(e) => setPin(e.target.value)}/>
         </DialogContent>
         <DialogActions>
