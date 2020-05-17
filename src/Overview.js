@@ -4,10 +4,17 @@ import {makeStyles} from '@material-ui/core/styles';
 import {transceive} from './actions';
 import Typography from "@material-ui/core/Typography";
 import {hexStringToString} from "./util";
+import Card from "@material-ui/core/Card";
+import CardContent from "@material-ui/core/CardContent";
+import CardActions from "@material-ui/core/CardActions";
+import Button from "@material-ui/core/Button";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
+    paddingLeft: "10%",
+    paddingRight: "10%",
+    paddingTop: "50px",
   },
 }));
 
@@ -15,7 +22,7 @@ export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
   const dispatch = useDispatch();
-  const [version, setVersion] = useState("unknown");
+  const [version, setVersion] = useState("Unknown");
 
   useEffect(() => {
     (async () => {
@@ -37,9 +44,38 @@ export default function Overview() {
 
   return (
     <div className={classes.root}>
-      <Typography>
-        Version: {version}
-      </Typography>
+      <Card>
+        <CardContent>
+          <Typography variant="h2">
+            Canokey Info
+          </Typography>
+          <Typography>
+            Connected: {device !== null ? 'true' : 'false'}
+          </Typography>
+          <Typography>
+            Firmware Version: {version}
+          </Typography>
+          <Typography>
+            Manufacturer: {device !== null ? device.manufacturerName : 'Unknown'}
+          </Typography>
+          <Typography>
+            Product: {device !== null ? device.productName : 'Unknown'}
+          </Typography>
+          <Typography>
+            Serial Number: {device !== null ? device.serialNumber : 'Unknown'}
+          </Typography>
+          <Typography>
+            USB Version: {device !== null ? `${device.usbVersionMajor}:${device.usbVersionMinor}` : 'Unknown'}
+          </Typography>
+        </CardContent>
+        <CardActions>
+          <Button>Admin</Button>
+          <Button>Webauthn (FIDO2)</Button>
+          <Button>OATH</Button>
+          <Button>OpenPGP</Button>
+          <Button>PIV</Button>
+        </CardActions>
+      </Card>
     </div>
   );
 }
