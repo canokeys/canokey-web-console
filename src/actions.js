@@ -39,8 +39,8 @@ export function disconnect() {
 export function appendAPDULog(capdu, rapdu) {
   return {
     type: TYPES.APPEND_APDU_LOG,
-    capdu,
-    rapdu
+    capdu: capdu.toUpperCase(),
+    rapdu: rapdu.toUpperCase()
   }
 }
 

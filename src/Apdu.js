@@ -10,6 +10,11 @@ import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
 import {connect, transceive} from "./actions";
 import {useSnackbar} from "notistack";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
+import ListItemAvatar from "@material-ui/core/ListItemAvatar";
+import SyncAltIcon from '@material-ui/icons/SyncAlt';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -161,6 +166,7 @@ export default function Apdu() {
   const [apdu, setApdu] = useState('');
   const [resp, setResp] = useState('');
   const {enqueueSnackbar} = useSnackbar();
+  const apduHistory = useSelector(state => state.apduLog);
 
   let {parsedApdu, error, errorMsg} = verifyApdu(apdu);
 
@@ -182,8 +188,8 @@ export default function Apdu() {
 
   return (
     <div className={classes.root}>
-      <Grid container className={classes.grid} spacing={1}>
-        <Grid item xs={6}>
+      <Grid container spacing={1} justify={"center"}>
+        <Grid item xs={5}>
           <Card>
             <CardContent>
               <Typography variant="h3">
@@ -234,6 +240,27 @@ export default function Apdu() {
                 Send
               </Button>
             </CardActions>
+          </Card>
+        </Grid>
+        <Grid item xs={5}>
+          <Card>
+            <CardContent>
+              <Typography variant="h3">
+                APDU History
+              </Typography>
+              <List>
+                {
+                  apduHistory.map((entry) => {
+                    return <ListItem key={entry}>
+                      <ListItemAvatar>
+                        <SyncAltIcon></SyncAltIcon>
+                      </ListItemAvatar>
+                      <ListItemText primary={`Command: ${entry.capdu}`} secondary={`Response: ${entry.rapdu}`}/>
+                    </ListItem>;
+                  })
+                }
+              </List>
+            </CardContent>
           </Card>
         </Grid>
       </Grid>

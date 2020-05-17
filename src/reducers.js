@@ -11,7 +11,7 @@ export function device(state = null, action) {
     return state;
 }
 
-export function apdu_log(state = List(), action) {
+export function apduLog(state = List(), action) {
     if (action.type === TYPES.APPEND_APDU_LOG) {
         return state.push({
             capdu: action.capdu,
