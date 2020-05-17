@@ -93,7 +93,7 @@ export default function App() {
               </ListItem>
               <ListItem button className={classes.nested}>
                 <ListItemIcon><ArrowForwardIcon /></ListItemIcon>
-                <ListItemText>CTAP</ListItemText>
+                <ListItemText>WebAuthn (FIDO2)</ListItemText>
               </ListItem>
               <ListItem button className={classes.nested}>
                 <ListItemIcon><ArrowForwardIcon /></ListItemIcon>
