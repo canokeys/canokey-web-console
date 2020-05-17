@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import logo from './logo.png';
 import { Toolbar, AppBar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider } from '@material-ui/core';
+import { useDispatch } from 'react-redux';
 import MenuIcon from '@material-ui/icons/Menu';
+import { connect } from './actions';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -19,6 +21,7 @@ const useStyles = makeStyles((theme) => ({
 function App() {
   const classes = useStyles();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const dispatch = useDispatch();
 
   return (
     <div className={classes.root}>
@@ -30,6 +33,9 @@ function App() {
           <Typography variant="h6" >
             CanoKey Web Console
           </Typography>
+          <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => dispatch(connect())}>
+            <MenuIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
       <Drawer
