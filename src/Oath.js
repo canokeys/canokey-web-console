@@ -34,6 +34,7 @@ import IconButton from "@material-ui/core/IconButton";
 import Tooltip from "@material-ui/core/Tooltip";
 import StarIcon from "@material-ui/icons/Star";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
+import AddIcon from "@material-ui/icons/Add";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -326,9 +327,11 @@ export default function Oath() {
               </TableContainer>
             </CardContent>
             <CardActions>
-              <Button onClick={() => setAddDialogOpen(true)}>
-                Add
-              </Button>
+              <Tooltip title="Add a new OATH credential">
+                <IconButton onClick={() => setAddDialogOpen(true)}>
+                  <AddIcon/>
+                </IconButton>
+              </Tooltip>
             </CardActions>
           </Card>
         </Grid>
