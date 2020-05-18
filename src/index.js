@@ -5,11 +5,12 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import thunk from 'redux-thunk';
 import logger from 'redux-logger';
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import { Provider } from 'react-redux';
+import {createStore, combineReducers, applyMiddleware} from 'redux';
+import {Provider} from 'react-redux';
 import * as reducers from './reducers';
-import { BrowserRouter } from 'react-router-dom';
-import { SnackbarProvider } from 'notistack';
+import {BrowserRouter} from 'react-router-dom';
+import {SnackbarProvider} from 'notistack';
+import Button from "@material-ui/core/Button";
 
 let middleware = [thunk];
 if (process.env.NODE_ENV !== 'production') {
@@ -17,12 +18,23 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const store = createStore(combineReducers(reducers), applyMiddleware(...middleware));
 
+const notistackRef = React.createRef();
+const onClickDismiss = key => () => {
+  notistackRef.current.closeSnackbar(key);
+}
+
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
       <BrowserRouter basename={process.env.PUBLIC_URL}>
-        <SnackbarProvider maxSnack={3}>
-          <App />
+        <SnackbarProvider
+          maxSnack={3} ref={notistackRef}
+          action={(key) => (
+            <Button onClick={onClickDismiss(key)}>
+              Dismiss
+            </Button>
+          )}>
+          <App/>
         </SnackbarProvider>
       </BrowserRouter>
     </Provider>

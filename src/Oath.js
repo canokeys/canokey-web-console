@@ -42,6 +42,7 @@ const useStyles = makeStyles((theme) => ({
   },
   grid: {
     marginTop: '30px',
+    marginBottom: '30px',
   }
 }));
 
@@ -317,7 +318,7 @@ export default function Oath() {
                     {entries.length === 0 ?
                       <TableRow>
                         <TableCell rowSpan={4}>
-                          No entries
+                          { device !== null ? 'No entries' : 'Please connect to device first' }
                         </TableCell>
                       </TableRow>
                       : null
