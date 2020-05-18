@@ -20,3 +20,10 @@ export function apduLog(state = List(), action) {
     }
     return state;
 }
+
+export function adminAuthenticated(state = false, action) {
+    if (action.type === TYPES.SET_ADMIN_AUTHENTICATED) {
+      return action.adminAuthenticated;
+    }
+    return state;
+}

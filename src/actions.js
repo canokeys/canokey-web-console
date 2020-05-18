@@ -3,6 +3,7 @@ import {byteToHexString, hexStringToByte, sleep} from "./util";
 export const TYPES = {
   SET_DEVICE: Symbol('SET_DEVICE'),
   APPEND_APDU_LOG: Symbol('APPEND_APDU_LOG'),
+  SET_ADMIN_AUTHENTICATED: Symbol('SET_ADMIN_AUTHENTICATED'),
 }
 
 export function setDevice(device) {
@@ -23,6 +24,7 @@ export function connect() {
       await device.open();
       await device.claimInterface(1);
       dispatch(setDevice(device));
+      dispatch(setAdminAuthenticated(false));
       return true;
     }
     return false;
@@ -33,6 +35,13 @@ export function disconnect() {
   return {
     type: TYPES.SET_DEVICE,
     device: null
+  }
+}
+
+export function setAdminAuthenticated(state) {
+  return {
+    type: TYPES.SET_ADMIN_AUTHENTICATED,
+    adminAuthenticated: state,
   }
 }
 

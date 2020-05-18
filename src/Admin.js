@@ -12,7 +12,7 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import TextField from "@material-ui/core/TextField";
 import DialogActions from "@material-ui/core/DialogActions";
-import {connect, transceive} from "./actions";
+import {connect, setAdminAuthenticated, transceive} from "./actions";
 import {byteToHexString} from "./util";
 import {useSnackbar} from "notistack";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
@@ -36,7 +36,7 @@ export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
   const dispatch = useDispatch();
-  const [authenticated, setAuthenticated] = useState(false);
+  const authenticated = useSelector(state => state.adminAuthenticated);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
   const {enqueueSnackbar} = useSnackbar();
@@ -86,7 +86,7 @@ export default function Overview() {
         let retry = parseInt(res.substr(3, 1), 16);
         enqueueSnackbar(`PIN verification failed, ${retry} retires left`, {variant: 'error'});
       } else if (res.endsWith("9000")) {
-        setAuthenticated(true);
+        dispatch(setAdminAuthenticated(true));
         enqueueSnackbar('PIN verification success', {variant: 'success'});
       } else {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
