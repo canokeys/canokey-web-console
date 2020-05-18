@@ -38,7 +38,7 @@ function verifyApdu(capdu) {
     let num = parseInt(capdu.substr(i, 1), 16);
     if (0 <= num && num < 16) {
       if (half) {
-        apduArray.push((halfByte * 4) + num);
+        apduArray.push((halfByte * 16) + num);
         half = false;
       } else {
         halfByte = num;
@@ -182,7 +182,7 @@ export default function Apdu() {
       setResp(await dispatch(transceive(capdu)));
       enqueueSnackbar('Command APDU sent', {variant: 'success'});
     } catch (err) {
-      enqueueSnackbar(err, {variant: 'error'});
+      enqueueSnackbar(err.toString(), {variant: 'error'});
     }
   }, [device, apdu]);
 

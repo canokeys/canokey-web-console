@@ -15,6 +15,7 @@ import { connect, disconnect } from './actions';
 import Overview from './Overview';
 import Admin from "./Admin";
 import Apdu from "./Apdu";
+import Oath from "./Oath";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -55,6 +56,11 @@ export default function App() {
   const showAPDU = useCallback(e => {
     setDrawerOpen(false);
     history.push('/apdu');
+  }, [history]);
+
+  const showOATH = useCallback(e => {
+    setDrawerOpen(false);
+    history.push('/oath');
   }, [history]);
 
   return (
@@ -103,7 +109,7 @@ export default function App() {
                 <ListItemIcon><ArrowForwardIcon /></ListItemIcon>
                 <ListItemText>WebAuthn (FIDO2)</ListItemText>
               </ListItem>
-              <ListItem button className={classes.nested}>
+              <ListItem button onClick={showOATH} className={classes.nested}>
                 <ListItemIcon><ArrowForwardIcon /></ListItemIcon>
                 <ListItemText>OATH</ListItemText>
               </ListItem>
@@ -128,6 +134,7 @@ export default function App() {
         <Route path="/" exact component={Overview} />
         <Route path="/admin" exact component={Admin} />
         <Route path="/apdu" exact component={Apdu} />
+        <Route path="/oath" exact component={Oath} />
       </Switch>
     </div>
   );

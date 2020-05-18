@@ -67,16 +67,16 @@ export default function Overview() {
         enqueueSnackbar(failed_msg, {variant: 'error'});
       }
     } catch (err) {
-      enqueueSnackbar(err, {variant: 'error'});
+      enqueueSnackbar(err.toString(), {variant: 'error'});
     }
     return false;
   }, [dispatch, selectAdminApplet]);
 
   const doAuthenticate = useCallback(async () => {
     setPinDialogOpen(false);
-    let array = new TextEncoder().encode(pin);
-    let len = new Uint8Array([array.length]);
     try {
+      let array = new TextEncoder().encode(pin);
+      let len = new Uint8Array([array.length]);
       await selectAdminApplet();
       let res = await dispatch(transceive(`00200000${byteToHexString(len)}${byteToHexString(array)}`, true));
       if (res.startsWith("63C")) {
@@ -88,7 +88,7 @@ export default function Overview() {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
       }
     } catch (err) {
-      enqueueSnackbar(err, {variant: 'error'});
+      enqueueSnackbar(err.toString(), {variant: 'error'});
     }
   }, [pin, adminTransceive]);
 

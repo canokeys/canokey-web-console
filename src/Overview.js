@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {makeStyles} from '@material-ui/core/styles';
 import {transceive} from './actions';
+import {useHistory} from 'react-router-dom';
 import Typography from "@material-ui/core/Typography";
 import {hexStringToString} from "./util";
 import Card from "@material-ui/core/Card";
@@ -23,6 +24,7 @@ export default function Overview() {
   const device = useSelector(state => state.device);
   const dispatch = useDispatch();
   const [version, setVersion] = useState("Unknown");
+  const history = useHistory();
 
   useEffect(() => {
     (async () => {
@@ -69,9 +71,9 @@ export default function Overview() {
           </Typography>
         </CardContent>
         <CardActions>
-          <Button>Admin</Button>
+          <Button onClick={() => history.push('/admin')}>Admin</Button>
           <Button>Webauthn (FIDO2)</Button>
-          <Button>OATH</Button>
+          <Button onClick={() => history.push('/oath')}>OATH</Button>
           <Button>OpenPGP</Button>
           <Button>PIV</Button>
         </CardActions>
