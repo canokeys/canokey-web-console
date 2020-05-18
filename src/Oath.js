@@ -302,11 +302,15 @@ export default function Oath() {
                           {entry.algo}
                         </TableCell>
                         <TableCell>
-                          <Tooltip title="Set as default">
-                            <IconButton onClick={() => doSetDefault(entry.name)}>
-                              <StarIcon/>
-                            </IconButton>
-                          </Tooltip>
+                          {
+                            entry.type === 'HOTP' ?
+                              <Tooltip title="Set as default">
+                                <IconButton onClick={() => doSetDefault(entry.name)}>
+                                  <StarIcon/>
+                                </IconButton>
+                              </Tooltip>
+                              : null
+                          }
                           <Tooltip title="Delete forever">
                             <IconButton onClick={() => doDelete(entry.name)}>
                               <DeleteForeverIcon/>
@@ -318,7 +322,7 @@ export default function Oath() {
                     {entries.length === 0 ?
                       <TableRow>
                         <TableCell rowSpan={4}>
-                          { device !== null ? 'No entries' : 'Please connect to device first' }
+                          {device !== null ? 'No entries' : 'Please connect to device first'}
                         </TableCell>
                       </TableRow>
                       : null
