@@ -72,7 +72,6 @@ export default function Overview() {
         </CardContent>
         <CardActions>
           <Button onClick={() => history.push('/admin')}>Admin</Button>
-          <Button>Webauthn (FIDO2)</Button>
           <Button onClick={() => history.push('/oath')}>OATH</Button>
           <Button>OpenPGP</Button>
           <Button>PIV</Button>

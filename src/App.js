@@ -133,10 +133,6 @@ export default function App() {
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>Admin</ListItemText>
               </ListItem>
-              <ListItem button className={classes.nested}>
-                <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
-                <ListItemText>WebAuthn (FIDO2)</ListItemText>
-              </ListItem>
               <ListItem button onClick={showOATH} className={classes.nested}>
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>OATH</ListItemText>
