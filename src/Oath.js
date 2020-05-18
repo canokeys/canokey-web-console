@@ -203,6 +203,29 @@ export default function Oath() {
     }
   }, [dispatch, name, algo, enqueueSnackbar, key, onlyIncreasing, requireTouch, selectOathApplet, type]);
 
+  const doSetDefault = useCallback(async (name) => {
+    try {
+      await selectOathApplet();
+      let data = [];
+      // name
+      data.push(0x71);
+      let nameArray = new TextEncoder().encode(name);
+      data.push(nameArray.length);
+      data.push(...nameArray);
+      // lc
+      data.unshift(data.length);
+
+      let res = await dispatch(transceive(`00550000${byteToHexString(data)}`));
+      if (res.endsWith("9000")) {
+        enqueueSnackbar('Set OATH credential as default success', {variant: 'success'});
+      } else {
+        enqueueSnackbar('Set OATH credential as default failed', {variant: 'error'});
+      }
+    } catch (err) {
+      enqueueSnackbar(err.toString(), {variant: 'error'});
+    }
+  }, [dispatch, enqueueSnackbar, selectOathApplet]);
+
   return (
     <div className={classes.root}>
       <Grid container spacing={1} justify={"center"} className={classes.grid}>
@@ -225,6 +248,9 @@ export default function Oath() {
                       <TableCell>
                         Algorithm
                       </TableCell>
+                      <TableCell>
+                        Action
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -239,11 +265,16 @@ export default function Oath() {
                         <TableCell>
                           {entry.algo}
                         </TableCell>
+                        <TableCell>
+                          <Button onClick={() => doSetDefault(entry.name)}>
+                            Set as default
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                     {entries.length === 0 ?
                       <TableRow>
-                        <TableCell rowSpan={3}>
+                        <TableCell rowSpan={4}>
                           No entries
                         </TableCell>
                       </TableRow>
