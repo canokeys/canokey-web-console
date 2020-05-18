@@ -115,7 +115,7 @@ export default function Overview() {
   }, [adminTransceive]);
 
   const setHotpOff = useCallback(async () => {
-    await adminTransceive("00400301", "HOTP on touch is off", "Set HOTP status failed");
+    await adminTransceive("00400300", "HOTP on touch is off", "Set HOTP status failed");
   }, [adminTransceive]);
 
   const resetOpenPGP = useCallback(async () => {
