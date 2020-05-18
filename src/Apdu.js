@@ -15,6 +15,10 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import SyncAltIcon from '@material-ui/icons/SyncAlt';
+import SendIcon from "@material-ui/icons/Send";
+import {byteToHexString} from "./util";
+import Tooltip from "@material-ui/core/Tooltip";
+import IconButton from "@material-ui/core/IconButton";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -193,7 +197,7 @@ export default function Apdu() {
         <Grid item xs={5}>
           <Card>
             <CardContent>
-              <Typography variant="h3">
+              <Typography variant="h4">
                 Send Command APDU
               </Typography>
               <TextField
@@ -207,21 +211,21 @@ export default function Apdu() {
                 parsedApdu ?
                   <div>
                     <Typography>
-                      CLA: {parsedApdu.cla.toString(16)}
+                      CLA: {byteToHexString([parsedApdu.cla])}
                     </Typography>
                     <Typography>
-                      INS: {parsedApdu.ins.toString(16)}
+                      INS: {byteToHexString([parsedApdu.ins])}
                     </Typography>
                     <Typography>
-                      P1: {parsedApdu.p1.toString(16)}
+                      P1: {byteToHexString([parsedApdu.p1])}
                     </Typography>
                     <Typography>
-                      P2: {parsedApdu.p2.toString(16)}
+                      P2: {byteToHexString([parsedApdu.p2])}
                     </Typography>
                     {
                       parsedApdu.data ?
                         <Typography>
-                          Command Data: {parsedApdu.data.toString(16)}
+                          Command Data: {byteToHexString(parsedApdu.data)}
                         </Typography> : null
                     }
                     <Typography>
@@ -237,24 +241,29 @@ export default function Apdu() {
               }
             </CardContent>
             <CardActions>
-              <Button onClick={sendApdu}>
-                Send
-              </Button>
+              <Tooltip title="Send APDU">
+                <IconButton onClick={sendApdu}>
+                  <SendIcon/>
+                </IconButton>
+              </Tooltip>
             </CardActions>
           </Card>
         </Grid>
         <Grid item xs={5}>
           <Card>
             <CardContent>
-              <Typography variant="h3">
+              <Typography variant="h4">
                 APDU History
+              </Typography>
+              <Typography>
+                From earliest to latest
               </Typography>
               <List>
                 {
                   apduHistory.map((entry) => {
                     return <ListItem key={entry}>
                       <ListItemAvatar>
-                        <SyncAltIcon></SyncAltIcon>
+                        <SyncAltIcon/>
                       </ListItemAvatar>
                       <ListItemText primary={`Command: ${entry.capdu}`} secondary={`Response: ${entry.rapdu}`}/>
                     </ListItem>;
