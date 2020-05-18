@@ -62,8 +62,11 @@ export default function App() {
   useEffect(() => {
     if (navigator.usb === undefined) {
       setCompatible(false);
-      enqueueSnackbar('Your browser does not support WebUSB, please use new versions of Chrome/Chromium/Edge/Opera',
+      enqueueSnackbar('Your browser does not support WebUSB, please use new versions of Chrome/Chromium/Edge/Opera.',
         {variant: "error"});
+    } else {
+      enqueueSnackbar('Your browser supports WebUSB, and you are good to go!',
+        {variant: "success"});
     }
   }, []);
 
