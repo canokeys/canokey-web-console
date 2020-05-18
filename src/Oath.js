@@ -30,6 +30,10 @@ import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import FormGroup from "@material-ui/core/FormGroup";
+import IconButton from "@material-ui/core/IconButton";
+import Tooltip from "@material-ui/core/Tooltip";
+import StarIcon from "@material-ui/icons/Star";
+import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -103,12 +107,12 @@ export default function Oath() {
       throw 'Invalid length of TLV';
     }
     let entries = [];
-    for (let i = 0;i < tlv.length;i += 2) {
-      if (tlv[i].tag !== 0x71 || tlv[i+1].tag !== 0x75) {
+    for (let i = 0; i < tlv.length; i += 2) {
+      if (tlv[i].tag !== 0x71 || tlv[i + 1].tag !== 0x75) {
         throw 'Bad tag in tlv'
       }
 
-      let rawType = tlv[i+1].value[0] >> 4;
+      let rawType = tlv[i + 1].value[0] >> 4;
       let type = 'unknown';
       if (rawType === 0x1) {
         type = 'HOTP';
@@ -116,7 +120,7 @@ export default function Oath() {
         type = 'TOTP';
       }
 
-      let rawAlgo = tlv[i+1].value[0] & 0xF;
+      let rawAlgo = tlv[i + 1].value[0] & 0xF;
       let algo = 'unknown';
       if (rawAlgo === 0x1) {
         algo = 'HMAC-SHA1';
@@ -133,17 +137,21 @@ export default function Oath() {
     setEntries(entries);
   }, [dispatch, selectOathApplet]);
 
+  const refresh = useCallback(async () => {
+    try {
+      if (device !== null) {
+        await fetchEntries();
+      }
+    } catch (err) {
+      enqueueSnackbar(err.toString(), {variant: 'error'});
+    }
+  }, [device, fetchEntries, enqueueSnackbar]);
+
   useEffect(() => {
     (async () => {
-      try {
-        if (device !== null) {
-          await fetchEntries();
-        }
-      } catch (err) {
-        enqueueSnackbar(err.toString(), {variant: 'error'});
-      }
+      await refresh();
     })();
-  }, [device, fetchEntries, enqueueSnackbar]);
+  }, [refresh]);
 
   const doAdd = useCallback(async () => {
     setAddDialogOpen(false);
@@ -202,7 +210,8 @@ export default function Oath() {
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
-  }, [dispatch, name, algo, enqueueSnackbar, key, onlyIncreasing, requireTouch, selectOathApplet, type]);
+    await refresh();
+  }, [refresh, dispatch, name, algo, enqueueSnackbar, key, onlyIncreasing, requireTouch, selectOathApplet, type]);
 
   const doSetDefault = useCallback(async (name) => {
     try {
@@ -226,6 +235,30 @@ export default function Oath() {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
   }, [dispatch, enqueueSnackbar, selectOathApplet]);
+
+  const doDelete = useCallback(async (name) => {
+    try {
+      await selectOathApplet();
+      let data = [];
+      // name
+      data.push(0x71);
+      let nameArray = new TextEncoder().encode(name);
+      data.push(nameArray.length);
+      data.push(...nameArray);
+      // lc
+      data.unshift(data.length);
+
+      let res = await dispatch(transceive(`00020000${byteToHexString(data)}`));
+      if (res.endsWith("9000")) {
+        enqueueSnackbar('Delete OATH credential success', {variant: 'success'});
+      } else {
+        enqueueSnackbar('Delete OATH credential failed', {variant: 'error'});
+      }
+    } catch (err) {
+      enqueueSnackbar(err.toString(), {variant: 'error'});
+    }
+    await refresh();
+  }, [refresh, dispatch, enqueueSnackbar, selectOathApplet]);
 
   return (
     <div className={classes.root}>
@@ -267,9 +300,16 @@ export default function Oath() {
                           {entry.algo}
                         </TableCell>
                         <TableCell>
-                          <Button onClick={() => doSetDefault(entry.name)}>
-                            Set as default
-                          </Button>
+                          <Tooltip title="Set as default">
+                            <IconButton onClick={() => doSetDefault(entry.name)}>
+                              <StarIcon/>
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete forever">
+                            <IconButton onClick={() => doDelete(entry.name)}>
+                              <DeleteForeverIcon/>
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))}
