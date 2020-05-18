@@ -10,12 +10,10 @@ import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
-import Alert from "@material-ui/core/DialogContentText";
 import TextField from "@material-ui/core/TextField";
 import DialogActions from "@material-ui/core/DialogActions";
 import {connect, transceive} from "./actions";
 import {byteToHexString} from "./util";
-import Snackbar from "@material-ui/core/Snackbar";
 import {useSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme) => ({
@@ -29,6 +27,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+/* eslint-disable no-throw-literal */
 export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
@@ -70,7 +69,7 @@ export default function Overview() {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
     return false;
-  }, [dispatch, selectAdminApplet]);
+  }, [dispatch, selectAdminApplet, enqueueSnackbar]);
 
   const doAuthenticate = useCallback(async () => {
     setPinDialogOpen(false);
@@ -91,7 +90,7 @@ export default function Overview() {
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
-  }, [pin, adminTransceive]);
+  }, [pin, dispatch, enqueueSnackbar, selectAdminApplet]);
 
   const onKeyPress = useCallback(async (e) => {
     if (e.key === 'Enter') {

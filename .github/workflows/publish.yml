@@ -20,8 +20,9 @@ jobs:
 
       - name: Duplicate index.html
         run: |
-          cp build/index.html build/apdu.html
           cp build/index.html build/admin.html
+          cp build/index.html build/apdu.html
+          cp build/index.html build/oath.html
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3

@@ -40,6 +40,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+/* eslint-disable no-throw-literal */
 function parseTLV(tlv) {
   let res = [];
   for (let i = 0; i < tlv.length;) {

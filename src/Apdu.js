@@ -159,6 +159,7 @@ function verifyApdu(capdu) {
 
 }
 
+/* eslint-disable no-throw-literal */
 export default function Apdu() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
@@ -184,7 +185,7 @@ export default function Apdu() {
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
-  }, [device, apdu]);
+  }, [device, apdu, dispatch, enqueueSnackbar]);
 
   return (
     <div className={classes.root}>

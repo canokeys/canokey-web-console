@@ -67,7 +67,7 @@ export default function Overview() {
             Serial Number: {device !== null ? device.serialNumber : 'Unknown'}
           </Typography>
           <Typography>
-            USB Version: {device !== null ? `${device.usbVersionMajor}:${device.usbVersionMinor}` : 'Unknown'}
+            USB Version: {device !== null ? `${device.usbVersionMajor}.${device.usbVersionMinor}` : 'Unknown'}
           </Typography>
         </CardContent>
         <CardActions>
