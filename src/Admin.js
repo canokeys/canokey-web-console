@@ -15,6 +15,7 @@ import DialogActions from "@material-ui/core/DialogActions";
 import {connect, transceive} from "./actions";
 import {byteToHexString} from "./util";
 import {useSnackbar} from "notistack";
+import ButtonGroup from "@material-ui/core/ButtonGroup";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -24,6 +25,9 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: "10%",
     marginRight: "10%",
     marginTop: "30px",
+  },
+  buttonGroup: {
+    marginLeft: "20px"
   }
 }));
 
@@ -130,7 +134,7 @@ export default function Overview() {
     <div className={classes.root}>
       <Card className={classes.card}>
         <CardContent>
-          <Typography variant="h2">
+          <Typography variant="h3">
             Admin Applet
           </Typography>
           <Typography>
@@ -138,7 +142,7 @@ export default function Overview() {
           </Typography>
         </CardContent>
         <CardActions>
-          <Button onClick={onAuthenticate}>
+          <Button onClick={onAuthenticate} variant="contained">
             Authenticate
           </Button>
         </CardActions>
@@ -148,31 +152,35 @@ export default function Overview() {
           <div>
             <Card className={classes.card}>
               <CardContent>
-                <Typography variant="h2">
+                <Typography variant="h3">
                   Config
                 </Typography>
-                <Typography>
+                <Typography variant="h6">
                   LED:
-                  <Button onClick={setLedOn}>ON</Button>
-                  <Button onClick={setLedOff}>OFF</Button>
+                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                    <Button onClick={setLedOn}>ON</Button>
+                    <Button onClick={setLedOff}>OFF</Button>
+                  </ButtonGroup>
                 </Typography>
-                <Typography>
+                <Typography variant="h6">
                   HOTP on touch:
-                  <Button onClick={setHotpOn}>ON</Button>
-                  <Button onClick={setHotpOff}>OFF</Button>
+                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                    <Button onClick={setHotpOn}>ON</Button>
+                    <Button onClick={setHotpOff}>OFF</Button>
+                  </ButtonGroup>
                 </Typography>
               </CardContent>
             </Card>
             <Card className={classes.card}>
               <CardContent>
-                <Typography variant="h2">
+                <Typography variant="h3">
                   Reset Applet
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button onClick={resetOpenPGP}>Reset OpenPGP</Button>
-                <Button onClick={resetPIV}>Reset PIV</Button>
-                <Button onClick={resetOATH}>Reset OATH</Button>
+                <Button onClick={resetOpenPGP} variant="contained">Reset OpenPGP</Button>
+                <Button onClick={resetPIV} variant="contained">Reset PIV</Button>
+                <Button onClick={resetOATH} variant="contained">Reset OATH</Button>
               </CardActions>
             </Card>
           </div>
