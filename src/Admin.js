@@ -83,6 +83,7 @@ export default function Overview() {
         let retry = parseInt(res.substr(3, 1), 16);
         enqueueSnackbar(`PIN verification failed, ${retry} retires left`, {variant: 'error'});
       } else if (res.endsWith("9000")) {
+        setAuthenticated(true);
         enqueueSnackbar('PIN verification success', {variant: 'success'});
       } else {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
