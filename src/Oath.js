@@ -36,8 +36,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   grid: {
-    marginLeft: '10%',
-    marginRight: '10%',
+    marginTop: '30px',
   }
 }));
 
@@ -108,7 +107,7 @@ export default function Oath() {
         throw 'Bad tag in tlv'
       }
 
-      let rawType = tlv[i+1].value[0] / 16;
+      let rawType = tlv[i+1].value[0] >> 4;
       let type = 'unknown';
       if (rawType === 0x1) {
         type = 'HOTP';
@@ -116,7 +115,7 @@ export default function Oath() {
         type = 'TOTP';
       }
 
-      let rawAlgo = tlv[i+1].value[0] % 16;
+      let rawAlgo = tlv[i+1].value[0] & 0xF;
       let algo = 'unknown';
       if (rawAlgo === 0x1) {
         algo = 'HMAC-SHA1';
@@ -206,7 +205,7 @@ export default function Oath() {
 
   return (
     <div className={classes.root}>
-      <Grid container spacing={1} justify={"center"}>
+      <Grid container spacing={1} justify={"center"} className={classes.grid}>
         <Grid item xs={10}>
           <Card>
             <CardContent>
