@@ -76,8 +76,20 @@ export default function Overview() {
     setPinDialogOpen(false);
     let array = new TextEncoder().encode(pin);
     let len = new Uint8Array([array.length]);
-    setAuthenticated(await adminTransceive(`00200000${byteToHexString(len)}${byteToHexString(array)}`,
-      'PIN verification success', 'PIN verification failed', true));
+    try {
+      await selectAdminApplet();
+      let res = await dispatch(transceive(`00200000${byteToHexString(len)}${byteToHexString(array)}`, true));
+      if (res.startsWith("63C")) {
+        let retry = parseInt(res.substr(3, 1), 16);
+        enqueueSnackbar(`PIN verification failed, ${retry} retires left`, {variant: 'error'});
+      } else if (res.endsWith("9000")) {
+        enqueueSnackbar('PIN verification success', {variant: 'success'});
+      } else {
+        enqueueSnackbar('PIN verification failed', {variant: 'error'});
+      }
+    } catch (err) {
+      enqueueSnackbar(err, {variant: 'error'});
+    }
   }, [pin, adminTransceive]);
 
   const onKeyPress = useCallback(async (e) => {
