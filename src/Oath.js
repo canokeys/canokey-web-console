@@ -197,7 +197,7 @@ export default function Oath() {
       }
       if (algo === 'HMAC-SHA1') {
         flag += 0x01;
-      } else if (algo === 'HMAC_SHA256') {
+      } else if (algo === 'HMAC-SHA256') {
         flag += 0x02;
       } else {
         throw 'invalid algorithm';
