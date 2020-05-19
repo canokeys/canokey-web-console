@@ -279,6 +279,37 @@ export default function Oath() {
     await refresh();
   }, [refresh, dispatch, enqueueSnackbar, selectOathApplet]);
 
+  const importFromClipboard = useCallback(async () => {
+    try {
+      let url = new URL(await navigator.clipboard.readText());
+      if (url.protocol !== 'otpauth:') {
+        throw 'Clipboard text is not a otpauth link';
+      }
+
+      if (url.searchParams.get("algorithm") === 'SHA1') {
+        setAlgo("HMAC-SHA1");
+      } else if (url.searchParams.get("algorithm") === 'SHA256') {
+        setAlgo("HMAC-SHA256");
+      } else if (url.searchParams.get("algorithm") !== null) {
+        throw 'Unsupported algorithm';
+      }
+
+      if (url.pathname.startsWith("//totp")) {
+        setType("TOTP");
+      } else if (url.pathname.startsWith("hotp")) {
+        setType("HOTP");
+      } else {
+        throw 'Unsupproted type';
+      }
+
+      setKey(url.searchParams.get("secret"));
+      setKeyEncoding("Base32");
+      console.log(url);
+    } catch (err) {
+      enqueueSnackbar(err.toString(), {variant: 'error'});
+    }
+  }, []);
+
   return (
     <div className={classes.root}>
       <Grid container spacing={1} justify={"center"} className={classes.grid}>
@@ -422,7 +453,10 @@ export default function Oath() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button color="primary" onClick={doAdd}>
+          <Button variant="contained" color="secondary" onClick={importFromClipboard}>
+            Import Otpauth from Clipboard
+          </Button>
+          <Button variant="contained" color="primary" onClick={doAdd}>
             Add
           </Button>
         </DialogActions>
