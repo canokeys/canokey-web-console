@@ -35,6 +35,7 @@ import Tooltip from "@material-ui/core/Tooltip";
 import StarIcon from "@material-ui/icons/Star";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import AddIcon from "@material-ui/icons/Add";
+import * as base32 from "hi-base32";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -80,6 +81,7 @@ export default function Oath() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [name, setName] = useState('');
   const [key, setKey] = useState('');
+  const [keyEncoding, setKeyEncoding] = useState('UTF-8');
   const [algo, setAlgo] = useState('HMAC-SHA1');
   const [type, setType] = useState('HOTP');
   const [onlyIncreasing, setOnlyIncreasing] = useState(false);
@@ -155,6 +157,22 @@ export default function Oath() {
     })();
   }, [refresh]);
 
+  let keyArray = [];
+  try {
+    if (keyEncoding === 'UTF-8') {
+      keyArray = new TextEncoder().encode(key);
+    } else if (keyEncoding === 'HEX') {
+      keyArray = hexStringToByte(key);
+    } else if (keyEncoding === 'Base32') {
+      keyArray = base32.decode.asBytes(key);
+    } else {
+      throw "Unsupported key encoding";
+    }
+  } catch (err) {
+    enqueueSnackbar(err.toString(), {variant: 'error'});
+  }
+
+
   const doAdd = useCallback(async () => {
     setAddDialogOpen(false);
     try {
@@ -167,7 +185,6 @@ export default function Oath() {
       data.push(...nameArray);
       // key
       data.push(0x73);
-      let keyArray = new TextEncoder().encode(key);
       data.push(keyArray.length + 2);
       let flag = 0;
       if (type === 'HOTP') {
@@ -350,14 +367,23 @@ export default function Oath() {
           <FormGroup col>
             <TextField
               fullWidth
-              placeholder={"Name"}
+              label="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}/>
             <TextField
               fullWidth
-              placeholder={"Key"}
+              label="Key"
               value={key}
-              onChange={(e) => setKey(e.target.value)}/>
+              onChange={(e) => setKey(e.target.value)}>
+            </TextField>
+            <FormControl>
+              <InputLabel id="encoding-label">Key Encoding</InputLabel>
+              <Select labelId="encoding-label" value={keyEncoding} onChange={(e) => setKeyEncoding(e.target.value)}>
+                <MenuItem value="UTF-8">UTF-8</MenuItem>
+                <MenuItem value="HEX">HEX</MenuItem>
+                <MenuItem value="Base32">Base32</MenuItem>
+              </Select>
+            </FormControl>
             <FormControl>
               <InputLabel id="algo-label">Algorithm</InputLabel>
               <Select labelId="algo-label" value={algo} onChange={(e) => setAlgo(e.target.value)}>
@@ -391,6 +417,9 @@ export default function Oath() {
               label="Require touch"
             />
           </FormGroup>
+          <Typography>
+            Key in hex: {byteToHexString(keyArray)}
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button color="primary" onClick={doAdd}>
