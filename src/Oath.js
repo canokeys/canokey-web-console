@@ -337,10 +337,10 @@ export default function Oath() {
       } else {
         throw 'Unsupproted type';
       }
+      setName(url.pathname.substring(7));
 
       setKey(url.searchParams.get("secret"));
       setKeyEncoding("Base32");
-      console.log(url);
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
