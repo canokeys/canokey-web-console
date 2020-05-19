@@ -332,7 +332,7 @@ export default function Oath() {
 
       if (url.pathname.startsWith("//totp")) {
         setType("TOTP");
-      } else if (url.pathname.startsWith("hotp")) {
+      } else if (url.pathname.startsWith("//hotp")) {
         setType("HOTP");
       } else {
         throw 'Unsupproted type';
