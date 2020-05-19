@@ -35,6 +35,7 @@ import Tooltip from "@material-ui/core/Tooltip";
 import StarIcon from "@material-ui/icons/Star";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import AddIcon from "@material-ui/icons/Add";
+import AvTimerIcon from "@material-ui/icons/AvTimer";
 import * as base32 from "hi-base32";
 
 const useStyles = makeStyles((theme) => ({
@@ -230,7 +231,7 @@ export default function Oath() {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
     await refresh();
-  }, [refresh, dispatch, name, algo, enqueueSnackbar, key, onlyIncreasing, requireTouch, selectOathApplet, type]);
+  }, [refresh, dispatch, name, algo, enqueueSnackbar, onlyIncreasing, requireTouch, selectOathApplet, type, keyArray]);
 
   const doSetDefault = useCallback(async (name) => {
     try {
@@ -249,6 +250,41 @@ export default function Oath() {
         enqueueSnackbar('Set OATH credential as default success', {variant: 'success'});
       } else {
         enqueueSnackbar('Set OATH credential as default failed', {variant: 'error'});
+      }
+    } catch (err) {
+      enqueueSnackbar(err.toString(), {variant: 'error'});
+    }
+  }, [dispatch, enqueueSnackbar, selectOathApplet]);
+
+  const doCalculate = useCallback(async (name) => {
+    try {
+      await selectOathApplet();
+      let data = [];
+      // name
+      data.push(0x71);
+      let nameArray = new TextEncoder().encode(name);
+      data.push(nameArray.length);
+      data.push(...nameArray);
+      // challenge
+      data.push(0x74);
+      let epoch = Math.round(new Date().getTime() / 1000.0);
+      let challenge = Math.floor(epoch / 30.0); // 30s
+      // 64bit
+      let str = challenge.toString(16).padStart(16, '0');
+      let challengeArray = hexStringToByte(str);
+      data.push(challengeArray.length);
+      data.push(...challengeArray);
+      // lc
+      data.unshift(data.length);
+
+      let res = await dispatch(transceive(`00040000${byteToHexString(data)}`));
+      if (res.endsWith("9000")) {
+        // 32bit integer
+        let arr = hexStringToByte(res.substr(6, 8));
+        let num = new DataView(arr.buffer).getUint32(0, false) % 1000000;
+        enqueueSnackbar(`TOTP code is ${num}`, {variant: 'success'});
+      } else {
+        enqueueSnackbar('Calculate TOTP failed', {variant: 'error'});
       }
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'});
@@ -308,7 +344,7 @@ export default function Oath() {
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
-  }, []);
+  }, [enqueueSnackbar]);
 
   return (
     <div className={classes.root}>
@@ -357,7 +393,12 @@ export default function Oath() {
                                   <StarIcon/>
                                 </IconButton>
                               </Tooltip>
-                              : null
+                              :
+                              <Tooltip title="Calculate TOTP">
+                                <IconButton onClick={() => doCalculate(entry.name)}>
+                                  <AvTimerIcon/>
+                                </IconButton>
+                              </Tooltip>
                           }
                           <Tooltip title="Delete forever">
                             <IconButton onClick={() => doDelete(entry.name)}>

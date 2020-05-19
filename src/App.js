@@ -68,7 +68,7 @@ export default function App() {
       enqueueSnackbar('Your browser supports WebUSB, and you are good to go!',
         {variant: "success"});
     }
-  }, []);
+  }, [enqueueSnackbar]);
 
 
   const showOverview = useCallback(e => {
