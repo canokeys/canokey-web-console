@@ -282,7 +282,7 @@ export default function Oath() {
         // 32bit integer
         let arr = hexStringToByte(res.substr(6, 8));
         let num = new DataView(arr.buffer).getUint32(0, false) % 1000000;
-        enqueueSnackbar(`TOTP code is ${num}`, {variant: 'success'});
+        enqueueSnackbar(`TOTP code is ${num.toString().padStart(6, '0')}`, {variant: 'success'});
       } else {
         enqueueSnackbar('Calculate TOTP failed', {variant: 'error'});
       }
