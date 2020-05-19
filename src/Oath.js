@@ -441,6 +441,8 @@ export default function Oath() {
               fullWidth
               label="Name"
               value={name}
+              error={name.length === 0}
+              helperText={name.length > 0 ? '' : 'name cannot be empty'}
               onChange={(e) => setName(e.target.value)}/>
             <TextField
               fullWidth
