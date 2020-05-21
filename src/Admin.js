@@ -39,6 +39,7 @@ export default function Overview() {
   const authenticated = useSelector(state => state.adminAuthenticated);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
+  const [flashCapacity, setFlashCapacity] = useState('unknown');
   const {enqueueSnackbar} = useSnackbar();
 
   const onAuthenticate = useCallback(() => {
@@ -88,6 +89,11 @@ export default function Overview() {
       } else if (res.endsWith("9000")) {
         dispatch(setAdminAuthenticated(true));
         enqueueSnackbar('PIN verification success', {variant: 'success'});
+        res = await dispatch(transceive("0041000000"));
+        if (res.endsWith("9000")) {
+          setFlashCapacity(parseInt(res.substring(0, res.length - 4), 16) + 'KiB');
+        }
+        console.log(res);
       } else {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
       }
@@ -139,6 +145,9 @@ export default function Overview() {
           </Typography>
           <Typography>
             Authenticated: {authenticated ? 'true' : 'false'}
+          </Typography>
+          <Typography>
+            Flash free space: {flashCapacity}
           </Typography>
         </CardContent>
         <CardActions>
