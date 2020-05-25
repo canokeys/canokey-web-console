@@ -92,7 +92,7 @@ export default function Overview() {
         res = await dispatch(transceive("0041000000"));
         if (res.endsWith("9000")) {
           let free = parseInt(res.substring(0, 2), 16);
-          let total = parseInt(res.substring(0, 2), 16);
+          let total = parseInt(res.substring(2, 4), 16);
           setFlashSpace(`free: ${free} KiB, total ${total} KiB`);
         }
       } else {
