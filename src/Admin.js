@@ -137,6 +137,10 @@ export default function Overview() {
     await adminTransceive("00050000", "Reset OATH done", "Reset OATH failed");
   }, [adminTransceive]);
 
+  const enterDFU = useCallback(async () => {
+    await adminTransceive("00FF2222", "Enter DFU done", "Enter DFU failed");
+  }, [adminTransceive]);
+
   return (
     <div className={classes.root}>
       <Card className={classes.card}>
@@ -179,6 +183,7 @@ export default function Overview() {
                     <Button onClick={setHotpOff}>OFF</Button>
                   </ButtonGroup>
                 </Typography>
+                <Button onClick={enterDFU}>Enter DFU (development only)</Button>
               </CardContent>
             </Card>
             <Card className={classes.card}>
