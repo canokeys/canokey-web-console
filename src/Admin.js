@@ -138,7 +138,8 @@ export default function Overview() {
   }, [adminTransceive]);
 
   const enterDFU = useCallback(async () => {
-    await adminTransceive("00FF2222", "Enter DFU done", "Enter DFU failed");
+    await adminTransceive("00FF2222", "Enter DFU: Unexpected success",
+      "Enter DFU: WebUSB disconnected, device should be in DFU now");
   }, [adminTransceive]);
 
   return (
@@ -199,7 +200,7 @@ export default function Overview() {
               </CardActions>
             </Card>
           </div>
-        : null
+          : null
       }
       <Dialog open={pinDialogOpen} onClose={() => setPinDialogOpen(false)}>
         <DialogTitle> Enter PIN to Authenticate Admin Applet</DialogTitle>
