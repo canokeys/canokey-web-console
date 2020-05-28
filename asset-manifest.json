@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/canokey-web-console/static/css/main.5ecd60fb.chunk.css",
+    "main.js": "/canokey-web-console/static/js/main.384ab22c.chunk.js",
+    "main.js.map": "/canokey-web-console/static/js/main.384ab22c.chunk.js.map",
+    "runtime-main.js": "/canokey-web-console/static/js/runtime-main.76c44f75.js",
+    "runtime-main.js.map": "/canokey-web-console/static/js/runtime-main.76c44f75.js.map",
+    "static/js/2.f768cf9f.chunk.js": "/canokey-web-console/static/js/2.f768cf9f.chunk.js",
+    "static/js/2.f768cf9f.chunk.js.map": "/canokey-web-console/static/js/2.f768cf9f.chunk.js.map",
+    "index.html": "/canokey-web-console/index.html",
+    "precache-manifest.9bd7c39bc84d32e21722027ec0cf5c7d.js": "/canokey-web-console/precache-manifest.9bd7c39bc84d32e21722027ec0cf5c7d.js",
+    "service-worker.js": "/canokey-web-console/service-worker.js",
+    "static/css/main.5ecd60fb.chunk.css.map": "/canokey-web-console/static/css/main.5ecd60fb.chunk.css.map",
+    "static/js/2.f768cf9f.chunk.js.LICENSE.txt": "/canokey-web-console/static/js/2.f768cf9f.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.76c44f75.js",
+    "static/js/2.f768cf9f.chunk.js",
+    "static/css/main.5ecd60fb.chunk.css",
+    "static/js/main.384ab22c.chunk.js"
+  ]
+}
