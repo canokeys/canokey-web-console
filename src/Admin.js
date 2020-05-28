@@ -184,8 +184,10 @@ export default function Overview() {
                     <Button onClick={setHotpOff}>OFF</Button>
                   </ButtonGroup>
                 </Typography>
-                <Button onClick={enterDFU}>Enter DFU (development only)</Button>
               </CardContent>
+              <CardActions>
+                <Button variant="contained" onClick={enterDFU}>Enter DFU (development only)</Button>
+              </CardActions>
             </Card>
             <Card className={classes.card}>
               <CardContent>

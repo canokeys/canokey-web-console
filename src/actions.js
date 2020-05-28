@@ -58,7 +58,7 @@ async function transceive_webusb(device, capdu) {
   let data = hexStringToByte(capdu);
 
   // send a command
-  await device.controlTransferOut({
+  let resp = await device.controlTransferOut({
     requestType: 'vendor',
     recipient: 'interface',
     request: 0,
@@ -67,7 +67,7 @@ async function transceive_webusb(device, capdu) {
   }, data);
   // wait for execution
   while (1) {
-    let resp = await device.controlTransferIn({
+    resp = await device.controlTransferIn({
       requestType: 'vendor',
       recipient: 'interface',
       request: 2,
@@ -78,7 +78,7 @@ async function transceive_webusb(device, capdu) {
     await sleep(100);
   }
   // get the response
-  let resp = await device.controlTransferIn({
+  resp = await device.controlTransferIn({
     requestType: 'vendor',
     recipient: 'interface',
     request: 1,
