@@ -25,6 +25,13 @@ export function connect() {
       await device.claimInterface(1);
       dispatch(setDevice(device));
       dispatch(setAdminAuthenticated(false));
+      navigator.usb.addEventListener('disconnect', event => {
+        console.log(`USB device disconnected ${event}`);
+        if (event.device === device) {
+          dispatch(setDevice(null));
+          dispatch(setAdminAuthenticated(false));
+        }
+      });
       return true;
     }
     return false;
