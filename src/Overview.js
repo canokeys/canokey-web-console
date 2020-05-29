@@ -9,6 +9,7 @@ import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
+import {useSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -25,21 +26,24 @@ export default function Overview() {
   const dispatch = useDispatch();
   const [version, setVersion] = useState("Unknown");
   const history = useHistory();
+  const {enqueueSnackbar} = useSnackbar();
 
   useEffect(() => {
     (async () => {
       if (device !== null) {
-        let res = await dispatch(transceive("00A4040005F000000000"));
-        if (!res.endsWith("9000")) {
-          return;
+        try {
+          let res = await dispatch(transceive("00A4040005F000000000"));
+          if (!res.endsWith("9000")) {
+            return;
+          }
+          res = await dispatch(transceive("0031000000"));
+          if (res.endsWith("9000")) {
+            let version = hexStringToString(res.substring(0, res.length - 4));
+            setVersion(version);
+          }
+        } catch (err) {
+          enqueueSnackbar(`Failed to get Canokey version: ${err}`, {variant: "error"});
         }
-        res = await dispatch(transceive("0031000000"));
-        if (res.endsWith("9000")) {
-          let version = hexStringToString(res.substring(0, res.length - 4));
-          setVersion(version);
-        }
-      } else {
-        console.log('device is not open');
       }
     })();
   }, [device, dispatch]);

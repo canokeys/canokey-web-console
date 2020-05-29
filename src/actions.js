@@ -74,8 +74,16 @@ async function transceive_webusb(device, capdu) {
       value: 0,
       index: 1
     }, 1);
-    if (new Uint8Array(resp.data.buffer)[0] === 0) break;
-    await sleep(100);
+    if (resp.status === 'stalled') {
+      throw 'Device busy';
+    }
+    let code = new Uint8Array(resp.data.buffer)[0];
+    if (code === 0) break;
+    else if (code === 1) {
+      await sleep(100);
+    } else {
+      throw 'Device busy';
+    }
   }
   // get the response
   resp = await device.controlTransferIn({
@@ -93,17 +101,12 @@ async function transceive_webusb(device, capdu) {
 export function transceive(capdu, is_secret) {
   return async (dispatch, getState) => {
     const {device} = getState();
-    try {
-      let res = await transceive_webusb(device, capdu);
-      if (is_secret) {
-        dispatch(appendAPDULog('REDACTED', res));
-      } else {
-        dispatch(appendAPDULog(capdu, res));
-      }
-      return res;
-    } catch (err) {
-      console.log(err);
+    let res = await transceive_webusb(device, capdu);
+    if (is_secret) {
+      dispatch(appendAPDULog('REDACTED', res));
+    } else {
+      dispatch(appendAPDULog(capdu, res));
     }
-    return '';
+    return res;
   };
 }
