@@ -187,6 +187,7 @@ export default function Overview() {
               </CardContent>
               <CardActions>
                 <Button variant="contained" onClick={enterDFU}>Enter DFU (development only)</Button>
+                <Button variant="contained" onClick={() => window.location = 'https://dfu.canokeys.org/'}>Go to Web DFU util</Button>
               </CardActions>
             </Card>
             <Card className={classes.card}>
