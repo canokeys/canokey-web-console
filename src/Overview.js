@@ -29,6 +29,7 @@ export default function Overview() {
   const device = useSelector(state => state.device);
   const dispatch = useDispatch();
   const [version, setVersion] = useState("Unknown");
+  const [variant, setVariant] = useState("Unknown");
   const history = useHistory();
   const {enqueueSnackbar} = useSnackbar();
 
@@ -44,6 +45,11 @@ export default function Overview() {
           if (res.endsWith("9000")) {
             let version = hexStringToString(res.substring(0, res.length - 4));
             setVersion(version);
+          }
+          res = await dispatch(transceive("0031010000"));
+          if (res.endsWith("9000")) {
+            let variant = hexStringToString(res.substring(0, res.length - 4));
+            setVariant(variant);
           }
         } catch (err) {
           enqueueSnackbar(`Failed to get Canokey version: ${err}`, {variant: "error"});
@@ -66,6 +72,9 @@ export default function Overview() {
               </Typography>
               <Typography>
                 Firmware Version: {version}
+              </Typography>
+              <Typography>
+                Variant: {variant}
               </Typography>
               <Typography>
                 Manufacturer: {device !== null ? device.manufacturerName : 'Unknown'}
