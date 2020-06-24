@@ -71,22 +71,28 @@ export default function Overview() {
                 Connected: {device !== null ? 'true' : 'false'}
               </Typography>
               <Typography>
-                Firmware Version: {version}
+                {
+                  device !== null ?
+                    `Firmware version: ${version}` : null
+                }
               </Typography>
               <Typography>
-                Variant: {variant}
+                {
+                  device !== null ?
+                    `Variant: ${variant}` : null
+                }
               </Typography>
               <Typography>
-                Manufacturer: {device !== null ? device.manufacturerName : 'Unknown'}
+                {device !== null ? `Manufacturer: ${device.manufacturerName}` : null}
               </Typography>
               <Typography>
-                Product: {device !== null ? device.productName : 'Unknown'}
+                {device !== null ? `Product: ${device.productName}` : null}
               </Typography>
               <Typography>
-                Serial Number: {device !== null ? device.serialNumber : 'Unknown'}
+                {device !== null ? `Serial Number: ${device.serialNumber}` : null}
               </Typography>
               <Typography>
-                USB Version: {device !== null ? `${device.usbVersionMajor}.${device.usbVersionMinor}` : 'Unknown'}
+                {device !== null ? `USB Version: ${device.usbVersionMajor}.${device.usbVersionMinor}` : null}
               </Typography>
             </CardContent>
           </Card>
