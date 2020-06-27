@@ -1,5 +1,6 @@
 import {byteToHexString, hexStringToByte, sleep} from "./util";
 
+/* eslint-disable no-throw-literal */
 export const TYPES = {
   SET_DEVICE: Symbol('SET_DEVICE'),
   APPEND_APDU_LOG: Symbol('APPEND_APDU_LOG'),
