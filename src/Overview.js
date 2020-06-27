@@ -56,7 +56,7 @@ export default function Overview() {
         }
       }
     })();
-  }, [device, dispatch]);
+  }, [enqueueSnackbar, device, dispatch]);
 
   return (
     <div className={classes.root}>
