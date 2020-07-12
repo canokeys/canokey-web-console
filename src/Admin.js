@@ -38,6 +38,7 @@ export default function Overview() {
   const dispatch = useDispatch();
   const authenticated = useSelector(state => state.adminAuthenticated);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [chPinDialogOpen, setChPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
   const [flashSpace, setFlashSpace] = useState('unknown');
   const {enqueueSnackbar} = useSnackbar();
@@ -46,6 +47,10 @@ export default function Overview() {
     setPinDialogOpen(true);
   }, []);
 
+
+  const onChangePin = useCallback(() => {
+    setChPinDialogOpen(true);
+  }, []);
 
   const selectAdminApplet = useCallback(async () => {
     if (device === null) {
@@ -103,11 +108,41 @@ export default function Overview() {
     }
   }, [pin, dispatch, enqueueSnackbar, selectAdminApplet]);
 
+  const doChangePin = useCallback(async () => {
+    setChPinDialogOpen(false);
+    try {
+      let array = new TextEncoder().encode(pin);
+      let len = new Uint8Array([array.length]);
+      await selectAdminApplet();
+      let res = await dispatch(transceive(`00210000${byteToHexString(len)}${byteToHexString(array)}`, true));
+      if (res.endsWith("9000")) {
+        dispatch(setAdminAuthenticated(true));
+        enqueueSnackbar('PIN changed', {variant: 'success'});
+        res = await dispatch(transceive("0041000000"));
+        if (res.endsWith("9000")) {
+          let free = parseInt(res.substring(0, 2), 16);
+          let total = parseInt(res.substring(2, 4), 16);
+          setFlashSpace(`free: ${free} KiB, total ${total} KiB`);
+        }
+      } else {
+        enqueueSnackbar('Change PIN failed', {variant: 'error'});
+      }
+    } catch (err) {
+      enqueueSnackbar(err.toString(), {variant: 'error'});
+    }
+  }, [pin, dispatch, enqueueSnackbar, selectAdminApplet]);
+
   const onKeyPress = useCallback(async (e) => {
     if (e.key === 'Enter') {
       await doAuthenticate();
     }
   }, [doAuthenticate]);
+
+  const onKeyPressChPin = useCallback(async (e) => {
+    if (e.key === 'Enter') {
+      await doChangePin();
+    }
+  }, [doChangePin]);
 
   const setLedOn = useCallback(async () => {
     await adminTransceive("00400101", "LED is on", "Set LED status failed");
@@ -186,6 +221,7 @@ export default function Overview() {
                 </Typography>
               </CardContent>
               <CardActions>
+                <Button variant="contained" onClick={onChangePin} > Change PIN </Button>
                 <Button variant="contained" onClick={enterDFU}>Enter DFU (development only)</Button>
                 <Button variant="contained" onClick={() => window.location = 'https://dfu.canokeys.org/'}>Go to Web DFU util</Button>
               </CardActions>
@@ -223,7 +259,26 @@ export default function Overview() {
             Authenticate
           </Button>
         </DialogActions>
-      </Dialog>
+     </Dialog>
+     <Dialog open={chPinDialogOpen} onClose={() => setChPinDialogOpen(false)}>
+        <DialogTitle> Enter new pin for Admin Applet</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter new pin for Admin Applet.
+          </DialogContentText>
+          <TextField
+            type="password"
+            autoFocus
+            fullWidth
+            onKeyPress={onKeyPressChPin}
+            onChange={(e) => setPin(e.target.value)}/>
+        </DialogContent>
+        <DialogActions>
+          <Button color="primary" onClick={doChangePin}>
+            Change Pin
+          </Button>
+        </DialogActions>
+     </Dialog>
     </div>
   );
 }
