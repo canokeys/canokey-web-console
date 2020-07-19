@@ -10,6 +10,7 @@ import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
 import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
+import ButtonGroup from "@material-ui/core/ButtonGroup";
 import Dialog from "@material-ui/core/Dialog";
 import AppBar from '@material-ui/core/AppBar';
 import PropTypes from 'prop-types';
@@ -44,6 +45,12 @@ const useStyles = makeStyles((theme) => ({
         marginRight: "5%",
         marginTop: "30px",
     },
+    buttonGroup:{
+        margin:'10px',
+    },
+    button:{
+        margin:'10px',
+    },
     grid: {
         marginTop: '30px',
         marginBottom: '30px',
@@ -54,7 +61,7 @@ function TabPanel(props) {
     const { children, value, index, ...other } = props;
 
     return (
-        <div
+        <span
             role="tabpanel"
             hidden={value !== index}
             id={`scrollable-force-tabpanel-${index}`}
@@ -66,7 +73,7 @@ function TabPanel(props) {
                     <Typography>{children}</Typography>
                 </Box>
             )}
-        </div>
+        </span>
     );
 }
 
@@ -97,7 +104,7 @@ export default function Piv() {
     const [newPin, setNewPin] = useState("");
     const [nowMK, setnowMK] = useState("");
     const [newMK, setNewMK] = useState("");
-    const [MKValid, setMKValid] = useState(false);  //set to false after test
+    const [MKValid, setMKValid] = useState(true);  //set to false after test
     const [MKAuthenDialogOpen,setMKAuthenDialogOpen] = useState(false);
     const [importCrtDialogOpen, setImportCrtDialogOpen] = useState(false);
     const [creatCrtDialogOpen, setCreatCrtDialogOpen] = useState(false);
@@ -127,9 +134,23 @@ export default function Piv() {
         case 3:
             slotPosition = '9e';
             break;
+        default:
+            slotPosition = '9a';
+            break;
     }
     const slotMap = {'9a':'5fc105', '9c':'5fc101', '9d':'5fc10a', '9e':'5fc10b'}
 
+    const selectPivApplet = useCallback(async () => {
+        if (device === null) {
+            if (!await dispatch(connect())) {
+                throw new Error('Cannot connect to Canokey');
+            }
+        }
+        let res = await dispatch(transceive("00A4040009A00000030800001000"));
+        if (!res.endsWith("9000")) {
+            throw new Error('Selecting piv applet failed');
+        }
+    }, [device, dispatch]);
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
@@ -137,11 +158,8 @@ export default function Piv() {
     const onImportKey = useCallback(() => {
         setImportKeyDialogOpen(true);
     }, []);
-    const onKeyPressImportKey = useCallback(async (e) => {
-        if (e.key === 'Enter') {
-            await doImportKey();
-        }
-    }, []);
+
+
 
     const doImportKey = useCallback(async()=>{
         setImportKeyDialogOpen(false);
@@ -195,7 +213,13 @@ export default function Piv() {
         }catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-    },[keyPem, slotPosition, enqueueSnackbar]);
+    },[keyPem, slotPosition, enqueueSnackbar, dispatch, keyAlgo]);
+
+    const onKeyPressImportKey = useCallback(async (e) => {
+        if (e.key === 'Enter') {
+            await doImportKey();
+        }
+    },[doImportKey]);
 
     const refresh = useCallback(async () => {
         try {
@@ -212,7 +236,7 @@ export default function Piv() {
         } catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-    }, [ownCrt, device, tabValue, enqueueSnackbar]);
+    }, [device, enqueueSnackbar, MKValid, dispatch, slotMap, slotPosition]);
 
     useEffect(() => {
         (async () => {
@@ -238,7 +262,7 @@ export default function Piv() {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
 
-    },[slotPosition, enqueueSnackbar]);
+    },[slotPosition, enqueueSnackbar, dispatch, slotMap]);
 
 
     const doDeleteCrt = useCallback(async()=>{
@@ -257,7 +281,7 @@ export default function Piv() {
         }
 
 
-    },[slotPosition, enqueueSnackbar]);
+    },[slotPosition, enqueueSnackbar, dispatch, slotMap]);
 
 
 
@@ -266,7 +290,6 @@ export default function Piv() {
         try{
             //creat key
 
-            let algoNum = '11';
             let keyRes = '';
             let publicJwk = {}
 
@@ -358,7 +381,7 @@ export default function Piv() {
         }catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-        }, [slotPosition, country, province, organization, organizationUnit, common,algo, enqueueSnackbar]
+        }, [slotPosition, country, province, organization, organizationUnit, common,algo, enqueueSnackbar, dispatch, slotMap]
     );
     const onImportCrt = useCallback(() => {
         setImportCrtDialogOpen(true);
@@ -388,7 +411,7 @@ export default function Piv() {
         } catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-    }, [slotPosition, tabValue, dispatch, enqueueSnackbar]);
+    }, [slotPosition, dispatch, enqueueSnackbar, slotMap]);
 
     const onChangePin = useCallback(() => {
         setChPinDialogOpen(true);
@@ -411,7 +434,7 @@ export default function Piv() {
         } catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-    }, [newPin,oldPin, dispatch, enqueueSnackbar]);
+    }, [newPin,oldPin, dispatch, enqueueSnackbar, selectPivApplet]);
 
     const onKeyPressChPin = useCallback(async (e) => {
         if (e.key === 'Enter') {
@@ -436,7 +459,7 @@ export default function Piv() {
         } catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-    }, [newMK, dispatch, enqueueSnackbar]);
+    }, [newMK, dispatch, enqueueSnackbar, selectPivApplet]);
 
     const onKeyPressChMK = useCallback(async (e) => {
         if (e.key === 'Enter') {
@@ -487,7 +510,7 @@ export default function Piv() {
         } catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-    }, [oldPin, nowMK, dispatch, enqueueSnackbar]);
+    }, [oldPin, nowMK, dispatch, enqueueSnackbar, selectPivApplet]);
 
     const onKeyPressMKAuthen = useCallback(async (e) => {
         if (e.key === 'Enter') {
@@ -495,17 +518,7 @@ export default function Piv() {
         }
     }, [doMKAuthen]);
 
-    const selectPivApplet = useCallback(async () => {
-        if (device === null) {
-            if (!await dispatch(connect())) {
-                throw 'Cannot connect to Canokey';
-            }
-        }
-        let res = await dispatch(transceive("00A4040009A00000030800001000"));
-        if (!res.endsWith("9000")) {
-            throw 'Selecting piv applet failed';
-        }
-    }, [device, dispatch]);
+
 
 
 
@@ -541,109 +554,85 @@ export default function Piv() {
                                         <Tab label="Card Authentication" {...a11yProps(3)} />
                                     </Tabs>
                                 </AppBar>
-                                <TabPanel value={tabValue} index={0}>
-                                    <Typography variant="h5" align='center'>
+                                <TabPanel value={tabValue} index={0} >
+                                    <Typography variant="h5">
                                         {
                                             ownCrt? 'You have a certificate in this slot.'
                                                 :"You don't have a certificate in this slot."
                                         }
                                     </Typography>
-                                    <Grid container justify={"center"} alignContent='center' alignItems='center' spacing={3}>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                                        <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
+
+                                        <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
+
+                                        <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
+                                    </ButtonGroup>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
                                             <Button variant="contained" onClick={onImportKey}>import-key</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
                                             <Button variant="contained" onClick={() => setCreatCrtDialogOpen(true)}>
                                             creat-key</Button>
-                                        </Grid>
-                                    </Grid>
+                                    </ButtonGroup>
                                 </TabPanel>
                                 <TabPanel value={tabValue} index={1}>
-                                    <Typography variant="h5" align='center'>
+                                    <Typography variant="h5">
                                         {
                                             ownCrt? 'You have a certificate in this slot.'
                                                 :"You don't have a certificate in this slot."
                                         }
                                     </Typography>
-                                    <Grid container justify={"center"} alignContent='center' alignItems='center' spacing={3}>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
-                                            <Button variant="contained" onClick={onImportKey}>import-key</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
-                                            <Button variant="contained" onClick={() => setCreatCrtDialogOpen(true)}>
-                                                creat-key</Button>
-                                        </Grid>
-                                    </Grid>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                                        <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
+
+                                        <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
+
+                                        <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
+                                    </ButtonGroup>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                                        <Button variant="contained" onClick={onImportKey}>import-key</Button>
+                                        <Button variant="contained" onClick={() => setCreatCrtDialogOpen(true)}>
+                                            creat-key</Button>
+                                    </ButtonGroup>
                                 </TabPanel>
                                 <TabPanel value={tabValue} index={2}>
-                                    <Typography variant="h5" align='center'>
+                                    <Typography variant="h5">
                                         {
                                             ownCrt? 'You have a certificate in this slot.'
                                                 :"You don't have a certificate in this slot."
                                         }
                                     </Typography>
-                                    <Grid container justify={"center"} alignContent='center' alignItems='center' spacing={3}>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
-                                            <Button variant="contained" onClick={onImportKey}>import-key</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
-                                            <Button variant="contained" onClick={() => setCreatCrtDialogOpen(true)}>
-                                                creat-key</Button>
-                                        </Grid>
-                                    </Grid>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                                        <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
+
+                                        <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
+
+                                        <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
+                                    </ButtonGroup>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                                        <Button variant="contained" onClick={onImportKey}>import-key</Button>
+                                        <Button variant="contained" onClick={() => setCreatCrtDialogOpen(true)}>
+                                            creat-key</Button>
+                                    </ButtonGroup>
                                 </TabPanel>
                                 <TabPanel value={tabValue} index={3}>
-                                    <Typography variant="h5" align='center'>
+                                    <Typography variant="h5">
                                         {
                                             ownCrt? 'You have a certificate in this slot.'
                                                 :"You don't have a certificate in this slot."
                                         }
                                     </Typography>
-                                    <Grid container justify={"center"} alignContent='center' alignItems='center' spacing={3}>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={4} md={4}>
-                                            <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
-                                            <Button variant="contained" onClick={onImportKey}>import-key</Button>
-                                        </Grid>
-                                        <Grid item xs={5} md={5}>
-                                            <Button variant="contained" onClick={() => setCreatCrtDialogOpen(true)}>
-                                                creat-key</Button>
-                                        </Grid>
-                                    </Grid>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                                        <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
+
+                                        <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
+
+                                        <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
+                                    </ButtonGroup>
+                                    <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                                        <Button variant="contained" onClick={onImportKey}>import-key</Button>
+                                        <Button variant="contained" onClick={() => setCreatCrtDialogOpen(true)}>
+                                            creat-key</Button>
+                                    </ButtonGroup>
                                 </TabPanel>
                             </Card>
                         </Grid>
@@ -658,13 +647,13 @@ export default function Piv() {
                             Manage PIV PIN and ManagementKey.
                         </Typography>
                         <CardActions>
-                            <Button variant="contained" onClick={onMKAuthen}>Authenticate</Button>
+                            <Button variant="contained" onClick={onMKAuthen} className={classes.button}>Authenticate</Button>
 
                             { MKValid ?
-                                <div>
-                                    <Button variant="contained" onClick={onChangePin}>change-pin</Button>
-                                    <Button variant="contained" onClick={onChangeMK}>change-managementkey</Button>
-                                </div>
+                                <span>
+                                    <Button variant="contained" onClick={onChangePin} className={classes.button}>change-pin</Button>
+                                    <Button variant="contained" onClick={onChangeMK} className={classes.button}>change-managementkey</Button>
+                                </span>
                                 : null
                             }
                         </CardActions>
