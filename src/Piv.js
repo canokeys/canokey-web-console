@@ -104,7 +104,7 @@ export default function Piv() {
     const [newPin, setNewPin] = useState("");
     const [nowMK, setnowMK] = useState("");
     const [newMK, setNewMK] = useState("");
-    const [MKValid, setMKValid] = useState(true);  //set to false after test
+    const [MKValid, setMKValid] = useState(false);  //set to false after test
     const [MKAuthenDialogOpen,setMKAuthenDialogOpen] = useState(false);
     const [importCrtDialogOpen, setImportCrtDialogOpen] = useState(false);
     const [creatCrtDialogOpen, setCreatCrtDialogOpen] = useState(false);
@@ -119,7 +119,7 @@ export default function Piv() {
     const [keyPem, setKeyPem] = useState('')
     const [ownCrt, setOwnCrt] = useState(false)
     const [keyAlgo, setKeyAlgo] = useState('RSA')
-
+    const [stopRefresh, SetStopRefresh] = useState(false)
     let slotPosition = '9a';
     switch(tabValue) {
         case 0:
@@ -163,6 +163,7 @@ export default function Piv() {
 
     const doImportKey = useCallback(async()=>{
         setImportKeyDialogOpen(false);
+        SetStopRefresh(true);
         try{
             if(keyAlgo==='RSA'){
                 const keyObj = new keyutil.Key('pem',keyPem);
@@ -213,6 +214,7 @@ export default function Piv() {
         }catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
+        SetStopRefresh(false);
     },[keyPem, slotPosition, enqueueSnackbar, dispatch, keyAlgo]);
 
     const onKeyPressImportKey = useCallback(async (e) => {
@@ -223,7 +225,7 @@ export default function Piv() {
 
     const refresh = useCallback(async () => {
         try {
-            if (device !== null && MKValid) {
+            if (device !== null && MKValid && !stopRefresh) {
                 let res = await dispatch(transceive(`00cb3fff0000055c03${slotMap[slotPosition]}`));
 
                 if (res.endsWith("9000")) {
@@ -236,7 +238,7 @@ export default function Piv() {
         } catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
-    }, [device, enqueueSnackbar, MKValid, dispatch, slotMap, slotPosition]);
+    }, [device, enqueueSnackbar, MKValid, dispatch, slotMap, slotPosition, stopRefresh]);
 
     useEffect(() => {
         (async () => {
@@ -250,14 +252,14 @@ export default function Piv() {
 
             if (res.endsWith("9000")) {
                 enqueueSnackbar(slotPosition+':Certificate export succeed', {variant: 'success'});
+                res = res.substr(8,res.length - 12);
+                const pemCrt = jseu.formatter.binToPem(hexStringToByte(res),'certificate')
+                let FileSaver = require('file-saver');
+                let blob = new Blob([pemCrt], {type: "text/plain;charset=utf-8"});
+                FileSaver.saveAs(blob, "newCertificate.crt");
             } else {
                 enqueueSnackbar(slotPosition+':Certificate export failed', {variant: 'error'});
             }
-            res = res.substr(8,res.length - 12);
-            const pemCrt = jseu.formatter.binToPem(hexStringToByte(res),'certificate')
-            let FileSaver = require('file-saver');
-            let blob = new Blob([pemCrt], {type: "text/plain;charset=utf-8"});
-            FileSaver.saveAs(blob, "newCertificate.crt");
         }catch (err) {
             enqueueSnackbar(err.toString(), {variant: 'error'});
         }
@@ -562,11 +564,11 @@ export default function Piv() {
                                         }
                                     </Typography>
                                     <ButtonGroup variant="contained" className={classes.buttonGroup}>
-                                        <Button variant="contained" onClick={onImportCrt}>import-crt</Button>
+                                        <Button variant="contained" onClick={onImportCrt}>import-cert</Button>
 
-                                        <Button variant="contained" onClick={doExportCrt}>export-crt</Button>
+                                        <Button variant="contained" onClick={doExportCrt}>export-cert</Button>
 
-                                        <Button variant="contained" onClick={doDeleteCrt}>delete-crt</Button>
+                                        <Button variant="contained" onClick={doDeleteCrt}>delete-cert</Button>
                                     </ButtonGroup>
                                     <ButtonGroup variant="contained" className={classes.buttonGroup}>
                                             <Button variant="contained" onClick={onImportKey}>import-key</Button>
