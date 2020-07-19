@@ -29,6 +29,7 @@ import Overview from './Overview';
 import Admin from "./Admin";
 import Apdu from "./Apdu";
 import Oath from "./Oath";
+import Piv from "./Piv";
 import {useSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme) => ({
@@ -89,6 +90,11 @@ export default function App() {
     history.push('/oath');
   }, [history]);
 
+  const showPIV = useCallback(e => {
+    setDrawerOpen(false);
+    history.push('/piv');
+  }, [history]);
+
   return (
     <div className={classes.root}>
       <AppBar position="static">
@@ -139,7 +145,7 @@ export default function App() {
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>OpenPGP</ListItemText>
               </ListItem>
-              <ListItem button className={classes.nested}>
+              <ListItem button onClick={showPIV} className={classes.nested}>
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>PIV</ListItemText>
               </ListItem>
@@ -157,6 +163,7 @@ export default function App() {
         <Route path="/admin" exact component={Admin}/>
         <Route path="/apdu" exact component={Apdu}/>
         <Route path="/oath" exact component={Oath}/>
+        <Route path="/piv" exact component={Piv}/>
       </Switch>
     </div>
   );
