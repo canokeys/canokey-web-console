@@ -117,6 +117,11 @@ export default function Piv() {
   const [ownCrt, setOwnCrt] = useState(false)
   const [keyAlgo, setKeyAlgo] = useState('RSA')
   const [stopRefresh, setStopRefresh] = useState(false)
+  const [oldPinValid, setOldPinValid] = useState(false)
+  const [newPinValid, setNewPinValid] = useState(false)
+  const [nowMKValid, setNowMKValid] = useState(false)
+  const [newMKValid, setNewMKValid] = useState(false)
+
   let slotPosition = '9a'
   switch (tabValue) {
     case 0:
@@ -341,7 +346,7 @@ export default function Piv() {
     setCreatCrtDialogOpen(false)
     try {
       //creat key
-      let keyRes = ''
+      let keyRes
       let publicJwk = {}
 
       if (algo === 'RSA-2048') {
@@ -620,14 +625,14 @@ export default function Piv() {
 
   return (
     <div className={classes.root}>
-      <Typography variant="h3">PIV</Typography>
+      <Typography variant="h3">PIV Applet</Typography>
       <Grid container justify={'center'} spacing={3}>
         {MKValid ? (
           <Grid item xs={12} md={12}>
             <Card className={classes.card}>
               <CardContent>
-                <Typography variant="h4">Certificates</Typography>
-                <Typography>Dealing with certificates</Typography>
+                <Typography variant="h3">Certificates</Typography>
+                <Typography>Dealing with certificates.</Typography>
               </CardContent>
               <AppBar position="static" color="default">
                 <Tabs
@@ -654,15 +659,15 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportCrt}>
-                    import-cert
+                    import cert
                   </Button>
 
                   <Button variant="contained" onClick={doExportCrt}>
-                    export-cert
+                    export cert
                   </Button>
 
                   <Button variant="contained" onClick={doDeleteCrt}>
-                    delete-cert
+                    delete cert
                   </Button>
                 </ButtonGroup>
                 <ButtonGroup
@@ -670,13 +675,13 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportKey}>
-                    import-key
+                    import key
                   </Button>
                   <Button
                     variant="contained"
                     onClick={() => setCreatCrtDialogOpen(true)}
                   >
-                    creat-key
+                    creat key
                   </Button>
                 </ButtonGroup>
               </TabPanel>
@@ -691,15 +696,15 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportCrt}>
-                    import-crt
+                    import crt
                   </Button>
 
                   <Button variant="contained" onClick={doExportCrt}>
-                    export-crt
+                    export crt
                   </Button>
 
                   <Button variant="contained" onClick={doDeleteCrt}>
-                    delete-crt
+                    delete crt
                   </Button>
                 </ButtonGroup>
                 <ButtonGroup
@@ -707,13 +712,13 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportKey}>
-                    import-key
+                    import key
                   </Button>
                   <Button
                     variant="contained"
                     onClick={() => setCreatCrtDialogOpen(true)}
                   >
-                    creat-key
+                    creat key
                   </Button>
                 </ButtonGroup>
               </TabPanel>
@@ -728,15 +733,15 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportCrt}>
-                    import-crt
+                    import crt
                   </Button>
 
                   <Button variant="contained" onClick={doExportCrt}>
-                    export-crt
+                    export crt
                   </Button>
 
                   <Button variant="contained" onClick={doDeleteCrt}>
-                    delete-crt
+                    delete crt
                   </Button>
                 </ButtonGroup>
                 <ButtonGroup
@@ -744,13 +749,13 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportKey}>
-                    import-key
+                    import key
                   </Button>
                   <Button
                     variant="contained"
                     onClick={() => setCreatCrtDialogOpen(true)}
                   >
-                    creat-key
+                    creat key
                   </Button>
                 </ButtonGroup>
               </TabPanel>
@@ -765,15 +770,15 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportCrt}>
-                    import-crt
+                    import crt
                   </Button>
 
                   <Button variant="contained" onClick={doExportCrt}>
-                    export-crt
+                    export crt
                   </Button>
 
                   <Button variant="contained" onClick={doDeleteCrt}>
-                    delete-crt
+                    delete crt
                   </Button>
                 </ButtonGroup>
                 <ButtonGroup
@@ -781,13 +786,13 @@ export default function Piv() {
                   className={classes.buttonGroup}
                 >
                   <Button variant="contained" onClick={onImportKey}>
-                    import-key
+                    import key
                   </Button>
                   <Button
                     variant="contained"
                     onClick={() => setCreatCrtDialogOpen(true)}
                   >
-                    creat-key
+                    creat key
                   </Button>
                 </ButtonGroup>
               </TabPanel>
@@ -796,8 +801,10 @@ export default function Piv() {
         ) : null}
         <Grid item xs={12} md={12}>
           <Card className={classes.card}>
-            <Typography variant="h4">Password Management</Typography>
-            <Typography>Manage PIV PIN and ManagementKey.</Typography>
+            <CardContent>
+              <Typography variant="h3">Password Management</Typography>
+              <Typography>Manage PIV PIN and ManagementKey.</Typography>
+            </CardContent>
             <CardActions>
               <Button
                 variant="contained"
@@ -814,14 +821,14 @@ export default function Piv() {
                     onClick={onChangePin}
                     className={classes.button}
                   >
-                    change-pin
+                    change pin
                   </Button>
                   <Button
                     variant="contained"
                     onClick={onChangeMK}
                     className={classes.button}
                   >
-                    change-managementkey
+                    change managementkey
                   </Button>
                 </span>
               ) : null}
@@ -833,29 +840,50 @@ export default function Piv() {
         open={MKAuthenDialogOpen}
         onClose={() => setMKAuthenDialogOpen(false)}
       >
-        <DialogTitle> Enter MK to Authenticate</DialogTitle>
+        <DialogTitle> Enter PIN and MK to Authenticate</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter PIN and ManagementKey below.
+            Enter PIN and ManagementKey below.Please be aware of PIN retry
+            count. This will not be stored in browser.
           </DialogContentText>
           <TextField
+            error={!oldPinValid}
             label="PIN"
             type="password"
             autoFocus
             fullWidth
             onKeyPress={onKeyPressMKAuthen}
-            onChange={(e) => setOldPin(e.target.value)}
+            onChange={(e) => {
+              setOldPin(e.target.value)
+              if (/^[0-9]{6,8}$/.test(e.target.value)) {
+                setOldPinValid(true)
+              } else {
+                setOldPinValid(false)
+              }
+            }}
           />
           <TextField
+            error={!nowMKValid}
             label="ManagementKey"
             type="password"
             fullWidth
             onKeyPress={onKeyPressMKAuthen}
-            onChange={(e) => setNowMK(e.target.value)}
+            onChange={(e) => {
+              setNowMK(e.target.value)
+              if (/^[A-Za-z0-9]{48}$/.test(e.target.value)) {
+                setNowMKValid(true)
+              } else {
+                setNowMKValid(false)
+              }
+            }}
           />
         </DialogContent>
         <DialogActions>
-          <Button color="primary" onClick={doMKAuthen}>
+          <Button
+            color="primary"
+            onClick={doMKAuthen}
+            disabled={!(oldPinValid && nowMKValid)}
+          >
             Authenticate
           </Button>
         </DialogActions>
@@ -867,24 +895,30 @@ export default function Piv() {
           setStopRefresh(false)
         }}
       >
-        <DialogTitle> Enter old and new pins for PIV Applet</DialogTitle>
+        <DialogTitle> Enter new PIN for PIV Applet</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Enter old and new pins for PIV Applet.
-          </DialogContentText>
+          <DialogContentText>Enter new PIN for PIV Applet.</DialogContentText>
           <form className={classes.root} noValidate autoComplete="off">
             <TextField
-              label="newPassword"
+              error={!newPinValid}
+              label="newPassword(6-8 numbers)"
               type="password"
               autoFocus
               fullWidth
               onKeyPress={onKeyPressChPin}
-              onChange={(e) => setNewPin(e.target.value)}
+              onChange={(e) => {
+                setNewPin(e.target.value)
+                if (/^[0-9]{6,8}$/.test(e.target.value)) {
+                  setNewPinValid(true)
+                } else {
+                  setNewPinValid(false)
+                }
+              }}
             />
           </form>
         </DialogContent>
         <DialogActions>
-          <Button color="primary" onClick={doChangePin}>
+          <Button color="primary" onClick={doChangePin} disabled={!newPinValid}>
             Change Pin
           </Button>
         </DialogActions>
@@ -896,22 +930,30 @@ export default function Piv() {
           setStopRefresh(false)
         }}
       >
-        <DialogTitle> Enter old and new MKs for PIV Applet</DialogTitle>
+        <DialogTitle> Enter new ManagementKey for PIV Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter old and new MKs for PIV Applet.
+            Enter new ManagementKey for PIV Applet.
           </DialogContentText>
           <TextField
-            label="newMK"
+            error={!newMKValid}
+            label="newMK(24 bytes)"
             type="password"
             autoFocus
             fullWidth
             onKeyPress={onKeyPressChMK}
-            onChange={(e) => setNewMK(e.target.value)}
+            onChange={(e) => {
+              setNewMK(e.target.value)
+              if (/^[A-Za-z0-9]{48}$/.test(e.target.value)) {
+                setNewMKValid(true)
+              } else {
+                setNewMKValid(false)
+              }
+            }}
           />
         </DialogContent>
         <DialogActions>
-          <Button color="primary" onClick={doChangeMK}>
+          <Button color="primary" onClick={doChangeMK} disabled={!newMKValid}>
             Change MK
           </Button>
         </DialogActions>
@@ -920,9 +962,11 @@ export default function Piv() {
         open={importCrtDialogOpen}
         onClose={() => setImportCrtDialogOpen(false)}
       >
-        <DialogTitle> Choose Crt to Import</DialogTitle>
+        <DialogTitle> Choose Certificate to Import</DialogTitle>
         <DialogContent>
-          <DialogContentText>Choose Crt below.</DialogContentText>
+          <DialogContentText>
+            Choose Certificate in pem format below.
+          </DialogContentText>
           <input type="file" id="file" />
         </DialogContent>
         <DialogActions>
@@ -954,31 +998,31 @@ export default function Piv() {
               label="State or Province Name"
               value={province}
               onChange={(e) => setProvince(e.target.value)}
-            ></TextField>
+            />
             <TextField
               fullWidth
               label="Locality Name (eg, city)"
               value={locality}
               onChange={(e) => setLocality(e.target.value)}
-            ></TextField>
+            />
             <TextField
               fullWidth
               label="Organization Name"
               value={organization}
               onChange={(e) => setOrganization(e.target.value)}
-            ></TextField>
+            />
             <TextField
               fullWidth
               label="Organizational Unit Name"
               value={organizationUnit}
               onChange={(e) => setOrganizationUnit(e.target.value)}
-            ></TextField>
+            />
             <TextField
               fullWidth
               label="Common Name"
               value={common}
               onChange={(e) => setCommon(e.target.value)}
-            ></TextField>
+            />
             <FormControl>
               <InputLabel id="algo-label">Algorithm</InputLabel>
               <Select
