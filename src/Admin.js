@@ -96,9 +96,9 @@ export default function Overview() {
         enqueueSnackbar('PIN verification success', {variant: 'success'});
         res = await dispatch(transceive("0041000000"));
         if (res.endsWith("9000")) {
-          let free = parseInt(res.substring(0, 2), 16);
+          let used = parseInt(res.substring(0, 2), 16);
           let total = parseInt(res.substring(2, 4), 16);
-          setFlashSpace(`free: ${free} KiB, total ${total} KiB`);
+          setFlashSpace(`${used} KiB / ${total} KiB`);
         }
       } else {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
@@ -120,9 +120,9 @@ export default function Overview() {
         enqueueSnackbar('PIN changed', {variant: 'success'});
         res = await dispatch(transceive("0041000000"));
         if (res.endsWith("9000")) {
-          let free = parseInt(res.substring(0, 2), 16);
+          let used = parseInt(res.substring(0, 2), 16);
           let total = parseInt(res.substring(2, 4), 16);
-          setFlashSpace(`free: ${free} KiB, total ${total} KiB`);
+          setFlashSpace(`${used} KiB / ${total} KiB`);
         }
       } else {
         enqueueSnackbar('Change PIN failed', {variant: 'error'});
@@ -188,7 +188,7 @@ export default function Overview() {
             Authenticated: {authenticated ? 'true' : 'false'}
           </Typography>
           <Typography>
-            Flash space info: {flashSpace}
+            Storage Usage: {flashSpace}
           </Typography>
         </CardContent>
         <CardActions>
