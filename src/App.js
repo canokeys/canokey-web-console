@@ -30,6 +30,7 @@ import Admin from "./Admin";
 import Apdu from "./Apdu";
 import Oath from "./Oath";
 import Piv from "./Piv";
+import OpenPGP from './OpenPGP';
 import {useSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme) => ({
@@ -94,6 +95,11 @@ export default function App() {
     setDrawerOpen(false);
     history.push('/piv');
   }, [history]);
+  
+  const showOpenPGP = useCallback(e => {
+    setDrawerOpen(false);
+    history.push('/openpgp');
+  }, [history]);
 
   return (
     <div className={classes.root}>
@@ -141,7 +147,7 @@ export default function App() {
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>OATH</ListItemText>
               </ListItem>
-              <ListItem button className={classes.nested}>
+              <ListItem button onClick={showOpenPGP} className={classes.nested}>
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>OpenPGP</ListItemText>
               </ListItem>
@@ -151,7 +157,7 @@ export default function App() {
               </ListItem>
             </List>
           </Collapse>
-          <ListItem button onClick={showAPDU}>
+          <ListItem button onClick={showAPDU} className={classes.nested}>
             <ListItemIcon><SyncAltIcon/></ListItemIcon>
             <ListItemText>APDU Console & History</ListItemText>
           </ListItem>
@@ -164,6 +170,7 @@ export default function App() {
         <Route path="/apdu" exact component={Apdu}/>
         <Route path="/oath" exact component={Oath}/>
         <Route path="/piv" exact component={Piv}/>
+		<Route path="/openpgp" exact component={OpenPGP} />
       </Switch>
     </div>
   );
