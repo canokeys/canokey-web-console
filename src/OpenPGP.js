@@ -29,7 +29,6 @@ import Tab from '@material-ui/core/Tab'
 import base64url from 'base64url'
 import Box from '@material-ui/core/Box'
 import sha1 from 'crypto-js/sha1'
-import js_x509 from 'js-x509-utils'
 import keyutil from 'js-crypto-key-utils'
 import jseu from 'js-encoding-utils'
 
