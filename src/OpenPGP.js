@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import { useDispatch, useSelector } from 'react-redux'
 import Grid from '@material-ui/core/Grid'
@@ -29,8 +29,10 @@ import Tab from '@material-ui/core/Tab'
 import base64url from 'base64url'
 import Box from '@material-ui/core/Box'
 import sha1 from 'crypto-js/sha1'
+import js_x509 from 'js-x509-utils'
 import keyutil from 'js-crypto-key-utils'
 import jseu from 'js-encoding-utils'
+import AwaitLock from 'await-lock'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -138,13 +140,15 @@ export default function OpenPGP() {
   const [keyState0, setKeyState0] = useState('00')
   const [keyState1, setKeyState1] = useState('00')
   const [keyState2, setKeyState2] = useState('00')
-  const [ownCrt, setOwnCrt] = useState(false)
-  const [initRefresh, setInitRefresh] = useState(false)
+  const [crtState0, setCrtState0] = useState(false)
+  const [crtState1, setCrtState1] = useState(false)
+  const [crtState2, setCrtState2] = useState(false)
   let slotPosition
   let algoSlot
   let keySlot
   let dateSlot
   let fingerprintSlot
+  let lock = new AwaitLock()
   switch (tabValue) {
     case 0:
       slotPosition = 'SIGnature'
@@ -193,46 +197,51 @@ export default function OpenPGP() {
   }
 
   const refresh = useCallback(async () => {
+    await lock.acquireAsync()
     try {
-      if (device === null) setMKValid(false)
-      if (device !== null && MKValid) {
-        let keyRes = await dispatch(transceive(`00ca00de00`))
+      let keyRes = await dispatch(transceive(`00ca00de00`))
+      if (keyRes.length !== 4) {
         setKeyState0(keyRes.substr(2, 2))
         setKeyState1(keyRes.substr(6, 2))
         setKeyState2(keyRes.substr(10, 2))
-
-        let urlRes = await dispatch(transceive(`00ca5f5000`))
-        if (urlRes === '9000') setUrl('Unknown')
-        else
-          setUrl(
-            new TextDecoder().decode(
-              hexStringToByte(urlRes.substr(0, urlRes.length - 4))
-            )
-          )
-
-        let selectRes = await dispatch(
-          transceive(`00a50${(2 - tabValue).toString(10)}040660045c027f2100`)
-        )
-        if (!selectRes.endsWith('9000')) {
-          return
-        }
-        let crtRes = await dispatch(transceive(`00CA7F21000000`))
-
-        if (crtRes.endsWith('9000') && crtRes !== '9000') setOwnCrt(true)
-        else setOwnCrt(false)
-        if (!initRefresh) setInitRefresh(true)
       }
+      await sleep(50)
+
+      let urlRes = await dispatch(transceive(`00ca5f5000`))
+      if (urlRes === '9000') setUrl('Unknown')
+      else
+        setUrl(
+          new TextDecoder().decode(
+            hexStringToByte(urlRes.substr(0, urlRes.length - 4))
+          )
+        )
+
+      let selectRes = await dispatch(transceive(`00a500040660045c027f2100`))
+      if (!selectRes.endsWith('9000')) {
+        return
+      }
+      await sleep(50)
+
+      let crtRes2 = await dispatch(transceive(`00CA7F21000000`))
+      if (crtRes2.endsWith('9000') && crtRes2 !== '9000') setCrtState2(true)
+      else setCrtState2(false)
+      await sleep(50)
+
+      let crtRes1 = await dispatch(transceive(`00CC7F21000000`))
+      if (crtRes1.endsWith('9000') && crtRes1 !== '9000') setCrtState1(true)
+      else setCrtState1(false)
+      await sleep(50)
+
+      let crtRes0 = await dispatch(transceive(`00CC7F21000000`))
+      if (crtRes0.endsWith('9000') && crtRes0 !== '9000') setCrtState0(true)
+      else setCrtState0(false)
+      await sleep(50)
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
     }
-  }, [MKValid, device, dispatch, enqueueSnackbar, initRefresh, tabValue])
-
-  useEffect(() => {
-    ;(async () => {
-      if (!initRefresh) await refresh()
-      if (device === null) setMKValid(false)
-    })()
-  }, [device, initRefresh, refresh])
+  }, [dispatch, enqueueSnackbar, lock])
 
   const onImportKey = useCallback(() => {
     setImportKeyDialogOpen(true)
@@ -240,6 +249,7 @@ export default function OpenPGP() {
 
   const doImportKey = useCallback(async () => {
     setImportKeyDialogOpen(false)
+    await lock.acquireAsync()
     try {
       let fingerprint
 
@@ -253,7 +263,6 @@ export default function OpenPGP() {
       if (keyAlgo === 'RSA-2048') {
         const keyObj = new keyutil.Key('pem', keyPem)
         let jwk = await keyObj.export('jwk')
-
         let algoRes = await dispatch(
           transceive(`00da00${algoSlot}06010800002000`)
         )
@@ -592,13 +601,12 @@ export default function OpenPGP() {
       await dispatch(transceive(`00da00${fingerprintSlot}14${fingerprint}`))
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
+      await refresh()
     }
-
-    sleep(500).then(() => {
-      refresh()
-    })
   }, [
-    refresh,
+    lock,
     keyAlgo,
     dispatch,
     dateSlot,
@@ -610,6 +618,7 @@ export default function OpenPGP() {
     slotPosition,
     tabValue,
     priKeyHex,
+    refresh,
   ])
 
   const onKeyPressImportKey = useCallback(
@@ -622,6 +631,7 @@ export default function OpenPGP() {
   )
 
   const doExportCrt = useCallback(async () => {
+    await lock.acquireAsync()
     try {
       let selectRes = await dispatch(
         transceive(`00a50${(2 - tabValue).toString(10)}040660045c027f2100`)
@@ -653,10 +663,13 @@ export default function OpenPGP() {
       }
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
     }
-  }, [tabValue, dispatch, enqueueSnackbar, slotPosition])
+  }, [lock, dispatch, tabValue, enqueueSnackbar, slotPosition])
 
   const doDeleteCrt = useCallback(async () => {
+    await lock.acquireAsync()
     try {
       let selectRes = await dispatch(
         transceive(`00a50${(2 - tabValue).toString(10)}040660045c027f2100`)
@@ -679,11 +692,11 @@ export default function OpenPGP() {
       }
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
+      await refresh()
     }
-    sleep(500).then(() => {
-      refresh()
-    })
-  }, [dispatch, tabValue, enqueueSnackbar, slotPosition, refresh])
+  }, [lock, dispatch, tabValue, enqueueSnackbar, slotPosition, refresh])
 
   const onImportCrt = useCallback(() => {
     setImportCrtDialogOpen(true)
@@ -691,6 +704,7 @@ export default function OpenPGP() {
 
   const doImportCrt = useCallback(async () => {
     setImportCrtDialogOpen(false)
+    await lock.acquireAsync()
     let file = document.getElementById('file').files[0]
     let reader = new FileReader()
     try {
@@ -721,18 +735,21 @@ export default function OpenPGP() {
       }
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
+      await sleep(500)
+      await refresh()
     }
-    sleep(500).then(() => {
-      refresh()
-    })
-  }, [dispatch, tabValue, enqueueSnackbar, slotPosition, refresh])
+  }, [lock, dispatch, tabValue, enqueueSnackbar, slotPosition, refresh])
 
   const doCreatKey = useCallback(async () => {
     setCreatKeyDialogOpen(false)
+    await lock.acquireAsync()
     try {
       //creat key
       let keyRes
       let fingerprint
+      let publicJwk = {}
       let date = new Date()
       let timeStamp = Math.round(date.getTime() / 1000)
         .toString(16)
@@ -756,7 +773,10 @@ export default function OpenPGP() {
           return
         }
         let modulusHex = keyRes.substr(18, 512)
+        let modulus = base64url(Buffer.from(hexStringToByte(modulusHex)))
         let exponentHex = keyRes.substr(534, 8)
+        let exponent = base64url(Buffer.from(hexStringToByte(exponentHex)))
+        publicJwk = { kty: 'RSA', n: modulus, e: exponent }
 
         data.push(1)
 
@@ -785,6 +805,13 @@ export default function OpenPGP() {
           return
         }
         keyRes = keyRes.substr(12, 128)
+        let xByte = hexStringToByte(keyRes.substr(0, 64))
+        let yByte = hexStringToByte(keyRes.substr(64, 64))
+        const xBuf = Buffer.from(xByte)
+        const yBuf = Buffer.from(yByte)
+        let xBase64 = base64url(xBuf)
+        let yBase64 = base64url(yBuf)
+        publicJwk = { kty: 'EC', crv: 'P-256', x: xBase64, y: yBase64 }
 
         if (tabValue === 1) {
           data.push(18)
@@ -824,6 +851,13 @@ export default function OpenPGP() {
           return
         }
         keyRes = keyRes.substr(12, 192)
+        let xByte = hexStringToByte(keyRes.substr(0, 96))
+        let yByte = hexStringToByte(keyRes.substr(96, 96))
+        const xBuf = Buffer.from(xByte)
+        const yBuf = Buffer.from(yByte)
+        let xBase64 = base64url(xBuf)
+        let yBase64 = base64url(yBuf)
+        publicJwk = { kty: 'EC', crv: 'P-384', x: xBase64, y: yBase64 }
 
         if (tabValue === 1) {
           data.push(18)
@@ -863,6 +897,13 @@ export default function OpenPGP() {
           return
         }
         keyRes = keyRes.substr(12, 128)
+        let xByte = hexStringToByte(keyRes.substr(0, 64))
+        let yByte = hexStringToByte(keyRes.substr(64, 64))
+        const xBuf = Buffer.from(xByte)
+        const yBuf = Buffer.from(yByte)
+        let xBase64 = base64url(xBuf)
+        let yBase64 = base64url(yBuf)
+        publicJwk = { kty: 'EC', crv: 'P-256K', x: xBase64, y: yBase64 }
 
         if (tabValue === 1) {
           data.push(18)
@@ -953,23 +994,76 @@ export default function OpenPGP() {
 
       //put fingerprint
       await dispatch(transceive(`00da00${fingerprintSlot}14${fingerprint}`))
+
+      //at this time, Curve-25519 lacks of means to creat a certificate
+      if (algo === 'Curve-25519') return
+
+      const ECKey = require('ec-key')
+      const randomKey = ECKey.createECKey()
+      const privateJwk = randomKey.toJSON()
+      const name = {
+        countryName: country,
+        stateOrProvinceName: province,
+        organizationName: organization,
+        organizationalUnitName: organizationUnit,
+        commonName: common,
+      }
+
+      js_x509
+        .fromJwk(publicJwk, privateJwk, 'der', {
+          signature: 'ecdsa-with-sha256', // or 'sha256WithRSAEncryption',
+          days: 365,
+          issuer: name,
+          subject: name,
+        })
+        .then(async (crt) => {
+          // now you get a certificate
+          const derCrt = byteToHexString(crt)
+          const Length = (derCrt.length / 2).toString(16).padStart(6, '0')
+          let selectRes = await dispatch(
+            transceive(`00a50${(2 - tabValue).toString(10)}040660045c027f2100`)
+          )
+          if (!selectRes.endsWith('9000')) {
+            enqueueSnackbar(slotPosition + ':Certificate creat failed', {
+              variant: 'error',
+            })
+            return
+          }
+          let res = await dispatch(transceive(`00da7f21${Length}${derCrt}`))
+          if (res.endsWith('9000')) {
+            enqueueSnackbar(slotPosition + ':Certificate creat succeed', {
+              variant: 'success',
+            })
+          } else {
+            enqueueSnackbar(slotPosition + ':Certificate creat failed', {
+              variant: 'error',
+            })
+          }
+        })
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
+      await sleep(500)
+      await refresh()
     }
-    sleep(500).then(() => {
-      refresh()
-    })
   }, [
-    refresh,
+    lock,
     algo,
     dispatch,
     dateSlot,
     fingerprintSlot,
+    country,
+    province,
+    organization,
+    organizationUnit,
+    common,
     algoSlot,
     keySlot,
     enqueueSnackbar,
     slotPosition,
     tabValue,
+    refresh,
   ])
 
   const onChangePin = useCallback(() => {
@@ -978,6 +1072,7 @@ export default function OpenPGP() {
 
   const doChangePin = useCallback(async () => {
     setChPinDialogOpen(false)
+    await lock.acquireAsync()
     try {
       let oldArray = new TextEncoder().encode(oldPin)
       let oldHexString = byteToHexString(oldArray)
@@ -1000,7 +1095,7 @@ export default function OpenPGP() {
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
     }
-  }, [newPin, oldPin, dispatch, enqueueSnackbar, selectOpenPGPApplet])
+  }, [lock, oldPin, newPin, selectOpenPGPApplet, dispatch, enqueueSnackbar])
 
   const onKeyPressChPin = useCallback(
     async (e) => {
@@ -1056,6 +1151,7 @@ export default function OpenPGP() {
 
   const doMKAuthen = useCallback(async () => {
     setMKAuthenDialogOpen(false)
+    await lock.acquireAsync()
     try {
       let pinArray = await new TextEncoder().encode(oldPin)
       let pinString = await byteToHexString(pinArray)
@@ -1092,8 +1188,19 @@ export default function OpenPGP() {
       else setMKValid(false)
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
+      await refresh()
     }
-  }, [oldPin, selectOpenPGPApplet, dispatch, nowMK, enqueueSnackbar])
+  }, [
+    lock,
+    oldPin,
+    selectOpenPGPApplet,
+    dispatch,
+    nowMK,
+    enqueueSnackbar,
+    refresh,
+  ])
 
   const onKeyPressMKAuthen = useCallback(
     async (e) => {
@@ -1110,6 +1217,7 @@ export default function OpenPGP() {
 
   const doChangeUrl = useCallback(async () => {
     setChUrlDialogOpen(false)
+    await lock.acquireAsync()
     try {
       let Array = new TextEncoder().encode(urlInput)
       let HexString = byteToHexString(Array)
@@ -1124,11 +1232,11 @@ export default function OpenPGP() {
       }
     } catch (err) {
       enqueueSnackbar(err.toString(), { variant: 'error' })
+    } finally {
+      lock.release()
+      await refresh()
     }
-    sleep(500).then(() => {
-      refresh()
-    })
-  }, [urlInput, selectOpenPGPApplet, dispatch, enqueueSnackbar, refresh])
+  }, [lock, urlInput, selectOpenPGPApplet, dispatch, enqueueSnackbar, refresh])
 
   const onKeyPressChUrl = useCallback(
     async (e) => {
@@ -1175,7 +1283,7 @@ export default function OpenPGP() {
               </AppBar>
               <TabPanel value={tabValue} index={0}>
                 <Typography>
-                  Certificate:{ownCrt ? 'Exist' : 'Not Exist'}
+                  Certificate:{crtState0 ? 'Exist' : 'Not Exist'}
                 </Typography>
                 <Typography>
                   Key:
@@ -1218,7 +1326,7 @@ export default function OpenPGP() {
               </TabPanel>
               <TabPanel value={tabValue} index={1}>
                 <Typography>
-                  Certificate:{ownCrt ? 'Exist' : 'Not Exist'}
+                  Certificate:{crtState1 ? 'Exist' : 'Not Exist'}
                 </Typography>
                 <Typography>
                   Key:
@@ -1261,7 +1369,7 @@ export default function OpenPGP() {
               </TabPanel>
               <TabPanel value={tabValue} index={2}>
                 <Typography>
-                  Certificate:{ownCrt ? 'Exist' : 'Not Exist'}
+                  Certificate:{crtState2 ? 'Exist' : 'Not Exist'}
                 </Typography>
                 <Typography>
                   Key:
@@ -1451,6 +1559,40 @@ export default function OpenPGP() {
             onChange={(e) => {
               setNewMK(e.target.value)
               if (/^[A-Za-z0-9]{8,64}$/.test(e.target.value)) {
+                setNewMKValid(true)
+              } else {
+                setNewMKValid(false)
+              }
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button color="primary" onClick={doChangeMK} disabled={!newMKValid}>
+            Change MK
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={chMKDialogOpen}
+        onClose={() => {
+          setChMKDialogOpen(false)
+        }}
+      >
+        <DialogTitle> Enter new ManagementKey for PIV Applet</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter new ManagementKey for PIV Applet.
+          </DialogContentText>
+          <TextField
+            error={!newMKValid}
+            label="newMK(24 bytes)"
+            type="password"
+            autoFocus
+            fullWidth
+            onKeyPress={onKeyPressChMK}
+            onChange={(e) => {
+              setNewMK(e.target.value)
+              if (/^[A-Za-z0-9]{48}$/.test(e.target.value)) {
                 setNewMKValid(true)
               } else {
                 setNewMKValid(false)
