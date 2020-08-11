@@ -25,7 +25,8 @@
     "js-crypto-key-utils":"^0.7.3",
     "ec-key": "^0.0.4",
     "js-x509-utils": "^0.5.3",
-    "base64url": "^3.0.1"
+    "base64url": "^3.0.1",
+    "await-lock": "^2.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
