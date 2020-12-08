@@ -189,6 +189,30 @@ export default function Overview() {
       "Enter DFU: WebUSB disconnected, device should be in DFU now");
   }, [adminTransceive]);
 
+  const setSIGtouchOn = useCallback(async () => {
+    await adminTransceive("00090001", "Set SIG touch policy REQUIRED", "Set SIG touch policy failed");
+  }, [adminTransceive]);
+
+  const setSIGtouchOff = useCallback(async () => {
+    await adminTransceive("00090000", "Set SIG touch policy NO", "Set SIG touch policy failed");
+  }, [adminTransceive]);
+
+  const setDECtouchOn = useCallback(async () => {
+    await adminTransceive("00090101", "Set DEC touch policy REQUIRED", "Set DEC touch policy failed");
+  }, [adminTransceive]);
+
+  const setDECtouchOff = useCallback(async () => {
+    await adminTransceive("00090100", "Set DEC touch policy NO", "Set DEC touch policy failed");
+  }, [adminTransceive]);
+
+  const setAUTtouchOn = useCallback(async () => {
+    await adminTransceive("00090201", "Set AUT touch policy REQUIRED", "Set AUT touch policy failed");
+  }, [adminTransceive]);
+
+  const setAUTtouchOff = useCallback(async () => {
+    await adminTransceive("00090200", "Set AUT touch policy NO", "Set AUT touch policy failed");
+  }, [adminTransceive]);
+
   return (
     <div className={classes.root}>
       <Card className={classes.card}>
@@ -236,6 +260,27 @@ export default function Overview() {
                   <ButtonGroup variant="contained" className={classes.buttonGroup}>
                     <Button onClick={setNDEFRO}>RO</Button>
                     <Button onClick={setNDEFRW}>RW</Button>
+                  </ButtonGroup>
+                </Typography>
+                <Typography variant="h6">
+                  Set OpenPGP SIG touch policy:
+                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                    <Button onClick={setSIGtouchOn}>Required</Button>
+                    <Button onClick={setSIGtouchOff}>No</Button>
+                  </ButtonGroup>
+                </Typography>
+                <Typography variant="h6">
+                  Set OpenPGP DEC touch policy:
+                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                    <Button onClick={setDECtouchOn}>Required</Button>
+                    <Button onClick={setDECtouchOff}>No</Button>
+                  </ButtonGroup>
+                </Typography>
+                <Typography variant="h6">
+                  Set OpenPGP AUT touch policy:
+                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                    <Button onClick={setAUTtouchOn}>Required</Button>
+                    <Button onClick={setAUTtouchOff}>No</Button>
                   </ButtonGroup>
                 </Typography>
               </CardContent>
