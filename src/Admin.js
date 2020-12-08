@@ -160,6 +160,14 @@ export default function Overview() {
     await adminTransceive("00400300", "HOTP on touch is off", "Set HOTP status failed");
   }, [adminTransceive]);
 
+  const setNDEFRO = useCallback(async () => {
+    await adminTransceive("00080100", "NDEF is RO", "Set NDEF status failed");
+  }, [adminTransceive]);
+
+  const setNDEFRW = useCallback(async () => {
+    await adminTransceive("00080000", "NDEF is RW", "Set NDEF status failed");
+  }, [adminTransceive]);
+
   const resetOpenPGP = useCallback(async () => {
     await adminTransceive("00030000", "Reset OpenPGP done", "Reset OpenPGP failed");
   }, [adminTransceive]);
@@ -217,6 +225,13 @@ export default function Overview() {
                   <ButtonGroup variant="contained" className={classes.buttonGroup}>
                     <Button onClick={setHotpOn}>ON</Button>
                     <Button onClick={setHotpOff}>OFF</Button>
+                  </ButtonGroup>
+                </Typography>
+                <Typography variant="h6">
+                  Toggle NDEF RO/RW:
+                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
+                    <Button onClick={setNDEFRO}>RO</Button>
+                    <Button onClick={setNDEFRW}>RW</Button>
                   </ButtonGroup>
                 </Typography>
               </CardContent>
