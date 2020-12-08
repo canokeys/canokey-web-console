@@ -180,6 +180,10 @@ export default function Overview() {
     await adminTransceive("00050000", "Reset OATH done", "Reset OATH failed");
   }, [adminTransceive]);
 
+  const resetNDEF = useCallback(async () => {
+    await adminTransceive("00070000", "Reset NDEF done", "Reset NDEF failed");
+  }, [adminTransceive]);
+
   const enterDFU = useCallback(async () => {
     await adminTransceive("00FF2222", "Enter DFU: Unexpected success",
       "Enter DFU: WebUSB disconnected, device should be in DFU now");
@@ -251,6 +255,7 @@ export default function Overview() {
                 <Button onClick={resetOpenPGP} variant="contained">Reset OpenPGP</Button>
                 <Button onClick={resetPIV} variant="contained">Reset PIV</Button>
                 <Button onClick={resetOATH} variant="contained">Reset OATH</Button>
+                <Button onClick={resetNDEF} variant="contained">Reset NDEF</Button>
               </CardActions>
             </Card>
           </div>
