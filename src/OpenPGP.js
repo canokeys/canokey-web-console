@@ -179,7 +179,7 @@ export default function OpenPGP() {
   const selectOpenPGPApplet = useCallback(async () => {
     if (device === null) {
       if (!(await dispatch(connect()))) {
-        throw new Error('Cannot connect to Canokey')
+        throw new Error('Cannot connect to CanoKey')
       }
     }
     let res = await dispatch(transceive('00A4040006d2760001240100'))
@@ -1182,7 +1182,7 @@ export default function OpenPGP() {
                   {keyState0 === '00'
                     ? 'Not Exist'
                     : keyState0 === '01'
-                    ? 'Created by Canokey'
+                    ? 'Created by CanoKey'
                     : 'Imported'}
                 </Typography>
                 <ButtonGroup
@@ -1225,7 +1225,7 @@ export default function OpenPGP() {
                   {keyState1 === '00'
                     ? 'Not Exist'
                     : keyState1 === '01'
-                    ? 'Created by Canokey'
+                    ? 'Created by CanoKey'
                     : 'Imported'}
                 </Typography>
                 <ButtonGroup
@@ -1268,7 +1268,7 @@ export default function OpenPGP() {
                   {keyState2 === '00'
                     ? 'Not Exist'
                     : keyState2 === '01'
-                    ? 'Created by Canokey'
+                    ? 'Created by CanoKey'
                     : 'Imported'}
                 </Typography>
                 <ButtonGroup

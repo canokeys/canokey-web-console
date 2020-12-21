@@ -64,7 +64,7 @@ export default function Overview() {
             setId(id);
           }
         } catch (err) {
-          enqueueSnackbar(`Failed to get Canokey version: ${err}`, {variant: "error"});
+          enqueueSnackbar(`Failed to get CanoKey version: ${err}`, {variant: "error"});
         }
       }
     })();
@@ -77,7 +77,7 @@ export default function Overview() {
           <Card>
             <CardContent>
               <Typography variant="h2">
-                Canokey Info
+                CanoKey Info
               </Typography>
               <Typography>
                 Connected: {device !== null ? 'true' : 'false'}
@@ -113,7 +113,7 @@ export default function Overview() {
                 Admin
               </Typography>
               <Typography>
-                Admin applet manages your Canokey.
+                Admin applet manages your CanoKey.
               </Typography>
             </CardContent>
             <CardActions>
@@ -128,7 +128,7 @@ export default function Overview() {
                 OATH
               </Typography>
               <Typography>
-                Canokey implements a custom OATH(Open AuTHentication) applet.
+                CanoKey implements a custom OATH(Open AuTHentication) applet.
               </Typography>
             </CardContent>
             <CardActions>
@@ -143,7 +143,7 @@ export default function Overview() {
                 OpenPGP
               </Typography>
               <Typography>
-                Canokey implements OpenPGP standard.
+                CanoKey implements OpenPGP standard.
               </Typography>
             </CardContent>
             <CardActions>
@@ -158,7 +158,7 @@ export default function Overview() {
                 PIV
               </Typography>
               <Typography>
-                Canokey implements PIV standard.
+                CanoKey implements PIV standard.
               </Typography>
             </CardContent>
             <CardActions>

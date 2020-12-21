@@ -150,7 +150,7 @@ export default function Piv() {
   const selectPivApplet = useCallback(async () => {
     if (device === null) {
       if (!(await dispatch(connect()))) {
-        throw new Error('Cannot connect to Canokey')
+        throw new Error('Cannot connect to CanoKey')
       }
     }
     let res = await dispatch(transceive('00A4040009A00000030800001000'))
