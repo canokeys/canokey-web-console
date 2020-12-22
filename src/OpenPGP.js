@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import { useDispatch, useSelector } from 'react-redux'
+import React, {useCallback, useState} from 'react'
+import {makeStyles} from '@material-ui/core/styles'
+import {useDispatch, useSelector} from 'react-redux'
 import Grid from '@material-ui/core/Grid'
-import { useSnackbar } from 'notistack'
-import { connect, transceive } from './actions'
-import { byteToHexString, hexStringToByte, sleep } from './util'
+import {useSnackbar} from 'notistack'
+import {connect, transceive} from './actions'
+import {byteToHexString, hexStringToByte, sleep} from './util'
 import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import Typography from '@material-ui/core/Typography'
@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 function TabPanel(props) {
-  const { children, value, index, ...other } = props
+  const {children, value, index, ...other} = props
 
   return (
     <span
@@ -107,7 +107,7 @@ export default function OpenPGP() {
   const classes = useStyles()
   const device = useSelector((state) => state.device)
   const dispatch = useDispatch()
-  const { enqueueSnackbar } = useSnackbar()
+  const {enqueueSnackbar} = useSnackbar()
   const [tabValue, setTabValue] = React.useState(0)
   const [chPinDialogOpen, setChPinDialogOpen] = useState(false)
   const [chMKDialogOpen, setChMKDialogOpen] = useState(false)
@@ -237,7 +237,7 @@ export default function OpenPGP() {
       else setCrtState0(false)
       await sleep(50)
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
     }
@@ -600,7 +600,7 @@ export default function OpenPGP() {
       //put fingerprint
       await dispatch(transceive(`00da00${fingerprintSlot}14${fingerprint}`))
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
       await refresh()
@@ -654,7 +654,7 @@ export default function OpenPGP() {
           'certificate'
         )
         let FileSaver = require('file-saver')
-        let blob = new Blob([pemCrt], { type: 'text/plain;charset=utf-8' })
+        let blob = new Blob([pemCrt], {type: 'text/plain;charset=utf-8'})
         FileSaver.saveAs(blob, 'newCertificate.crt')
       } else {
         enqueueSnackbar(slotPosition + ':Certificate export failed', {
@@ -662,7 +662,7 @@ export default function OpenPGP() {
         })
       }
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
     }
@@ -691,7 +691,7 @@ export default function OpenPGP() {
         })
       }
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
       await refresh()
@@ -734,7 +734,7 @@ export default function OpenPGP() {
         }
       }
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
       await sleep(500)
@@ -776,7 +776,7 @@ export default function OpenPGP() {
         let modulus = base64url(Buffer.from(hexStringToByte(modulusHex)))
         let exponentHex = keyRes.substr(534, 8)
         let exponent = base64url(Buffer.from(hexStringToByte(exponentHex)))
-        publicJwk = { kty: 'RSA', n: modulus, e: exponent }
+        publicJwk = {kty: 'RSA', n: modulus, e: exponent}
 
         data.push(1)
 
@@ -811,7 +811,7 @@ export default function OpenPGP() {
         const yBuf = Buffer.from(yByte)
         let xBase64 = base64url(xBuf)
         let yBase64 = base64url(yBuf)
-        publicJwk = { kty: 'EC', crv: 'P-256', x: xBase64, y: yBase64 }
+        publicJwk = {kty: 'EC', crv: 'P-256', x: xBase64, y: yBase64}
 
         if (tabValue === 1) {
           data.push(18)
@@ -857,7 +857,7 @@ export default function OpenPGP() {
         const yBuf = Buffer.from(yByte)
         let xBase64 = base64url(xBuf)
         let yBase64 = base64url(yBuf)
-        publicJwk = { kty: 'EC', crv: 'P-384', x: xBase64, y: yBase64 }
+        publicJwk = {kty: 'EC', crv: 'P-384', x: xBase64, y: yBase64}
 
         if (tabValue === 1) {
           data.push(18)
@@ -903,7 +903,7 @@ export default function OpenPGP() {
         const yBuf = Buffer.from(yByte)
         let xBase64 = base64url(xBuf)
         let yBase64 = base64url(yBuf)
-        publicJwk = { kty: 'EC', crv: 'P-256K', x: xBase64, y: yBase64 }
+        publicJwk = {kty: 'EC', crv: 'P-256K', x: xBase64, y: yBase64}
 
         if (tabValue === 1) {
           data.push(18)
@@ -1041,7 +1041,7 @@ export default function OpenPGP() {
           }
         })
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
       await sleep(500)
@@ -1087,13 +1087,13 @@ export default function OpenPGP() {
         transceive(`00240081${Len}${oldHexString}${newHexString}`, true)
       )
       if (res.endsWith('9000')) {
-        enqueueSnackbar('PIN changed', { variant: 'success' })
+        enqueueSnackbar('PIN changed', {variant: 'success'})
         setOldPin(newPin)
       } else {
-        enqueueSnackbar('Change PIN failed', { variant: 'error' })
+        enqueueSnackbar('Change PIN failed', {variant: 'error'})
       }
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     }
   }, [lock, oldPin, newPin, selectOpenPGPApplet, dispatch, enqueueSnackbar])
 
@@ -1126,13 +1126,13 @@ export default function OpenPGP() {
         transceive(`00240083${Len}${oldHexString}${newHexString}`, true)
       )
       if (res.endsWith('9000')) {
-        enqueueSnackbar('MK changed', { variant: 'success' })
+        enqueueSnackbar('MK changed', {variant: 'success'})
         setNowMK(newMK)
       } else {
-        enqueueSnackbar('Change MK failed', { variant: 'error' })
+        enqueueSnackbar('Change MK failed', {variant: 'error'})
       }
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     }
   }, [nowMK, newMK, selectOpenPGPApplet, dispatch, enqueueSnackbar])
 
@@ -1163,10 +1163,10 @@ export default function OpenPGP() {
         transceive(`00200082${pinLen}${pinString}`, true)
       )
       if (pinRes.endsWith('9000')) {
-        enqueueSnackbar('PIN verified', { variant: 'success' })
+        enqueueSnackbar('PIN verified', {variant: 'success'})
         pinVerify = true
       } else {
-        enqueueSnackbar('Verify PIN failed', { variant: 'error' })
+        enqueueSnackbar('Verify PIN failed', {variant: 'error'})
         pinVerify = false
       }
 
@@ -1177,17 +1177,17 @@ export default function OpenPGP() {
         transceive(`00200083${MKLen}${MKString}`, true)
       )
       if (MKRes.endsWith('9000')) {
-        enqueueSnackbar('MK verification success', { variant: 'success' })
+        enqueueSnackbar('MK verification success', {variant: 'success'})
         MKVerify = true
       } else {
-        enqueueSnackbar('MK verification failed', { variant: 'error' })
+        enqueueSnackbar('MK verification failed', {variant: 'error'})
         MKVerify = false
       }
 
       if (pinVerify && MKVerify) setMKValid(true)
       else setMKValid(false)
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
       await refresh()
@@ -1226,12 +1226,12 @@ export default function OpenPGP() {
       await selectOpenPGPApplet()
       let res = await dispatch(transceive(`00da5f50${Len}${HexString}`))
       if (res.endsWith('9000')) {
-        enqueueSnackbar('url changed', { variant: 'success' })
+        enqueueSnackbar('url changed', {variant: 'success'})
       } else {
-        enqueueSnackbar('Change url failed', { variant: 'error' })
+        enqueueSnackbar('Change url failed', {variant: 'error'})
       }
     } catch (err) {
-      enqueueSnackbar(err.toString(), { variant: 'error' })
+      enqueueSnackbar(err.toString(), {variant: 'error'})
     } finally {
       lock.release()
       await refresh()
@@ -1290,8 +1290,8 @@ export default function OpenPGP() {
                   {keyState0 === '00'
                     ? 'Not Exist'
                     : keyState0 === '01'
-                    ? 'Created by CanoKey'
-                    : 'Imported'}
+                      ? 'Created by CanoKey'
+                      : 'Imported'}
                 </Typography>
                 <ButtonGroup
                   variant="contained"
@@ -1333,8 +1333,8 @@ export default function OpenPGP() {
                   {keyState1 === '00'
                     ? 'Not Exist'
                     : keyState1 === '01'
-                    ? 'Created by CanoKey'
-                    : 'Imported'}
+                      ? 'Created by CanoKey'
+                      : 'Imported'}
                 </Typography>
                 <ButtonGroup
                   variant="contained"
@@ -1376,8 +1376,8 @@ export default function OpenPGP() {
                   {keyState2 === '00'
                     ? 'Not Exist'
                     : keyState2 === '01'
-                    ? 'Created by CanoKey'
-                    : 'Imported'}
+                      ? 'Created by CanoKey'
+                      : 'Imported'}
                 </Typography>
                 <ButtonGroup
                   variant="contained"
@@ -1617,7 +1617,7 @@ export default function OpenPGP() {
           <DialogContentText>
             Choose Certificate in pem format below.
           </DialogContentText>
-          <input type="file" id="file" />
+          <input type="file" id="file"/>
         </DialogContent>
         <DialogActions>
           <Button color="primary" onClick={doImportCrt}>

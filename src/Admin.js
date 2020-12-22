@@ -84,7 +84,7 @@ export default function Overview() {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
     return false;
-  }, [dispatch, selectAdminApplet, enqueueSnackbar]);
+  }, [dispatch, enqueueSnackbar]);
 
   const doAuthenticate = useCallback(async () => {
     setPinDialogOpen(false);
