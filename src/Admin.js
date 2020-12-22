@@ -16,6 +16,7 @@ import {connect, setAdminAuthenticated, transceive} from "./actions";
 import {byteToHexString} from "./util";
 import {useSnackbar} from "notistack";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
+import {Switch} from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -41,6 +42,11 @@ export default function Overview() {
   const [chPinDialogOpen, setChPinDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
   const [flashSpace, setFlashSpace] = useState('unknown');
+  const [state, setState] = useState({
+    led: false,
+    hotp: false,
+    ndefReadonly: false
+  });
   const {enqueueSnackbar} = useSnackbar();
 
   const onAuthenticate = useCallback(() => {
@@ -67,7 +73,6 @@ export default function Overview() {
 
   const adminTransceive = useCallback(async (capdu, success_msg, failed_msg, secret) => {
     try {
-      await selectAdminApplet();
       let res = await dispatch(transceive(capdu, secret));
       if (res.endsWith("9000")) {
         enqueueSnackbar(success_msg, {variant: 'success'});
@@ -99,6 +104,13 @@ export default function Overview() {
           let used = parseInt(res.substring(0, 2), 16);
           let total = parseInt(res.substring(2, 4), 16);
           setFlashSpace(`${used} KiB / ${total} KiB`);
+        }
+        res = await dispatch(transceive("0042000000"));
+        if (res.endsWith("9000")) {
+          let ledOn = res.substring(0, 2) === "01";
+          let hotpOn = res.substring(2, 4) === "01";
+          let ndefReadonly = res.substring(4, 6) === "01";
+          setState({led: ledOn, hotp: hotpOn, ndefReadonly: ndefReadonly});
         }
       } else {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
@@ -144,28 +156,34 @@ export default function Overview() {
     }
   }, [doChangePin]);
 
-  const setLedOn = useCallback(async () => {
-    await adminTransceive("00400101", "LED is on", "Set LED status failed");
+  const setLedStatus = useCallback(async (e) => {
+    let ledOn = e.target.checked;
+    if (ledOn) {
+      await adminTransceive("00400101", "LED is on", "Set LED status failed");
+    } else {
+      await adminTransceive("00400100", "LED is off", "Set LED status failed");
+    }
+    setState(oldState => ({...oldState, led: ledOn}));
   }, [adminTransceive]);
 
-  const setLedOff = useCallback(async () => {
-    await adminTransceive("00400100", "LED is off", "Set LED status failed");
+  const setHotpStatus = useCallback(async (e) => {
+    let hotpOn = e.target.checked;
+    if (hotpOn) {
+      await adminTransceive("00400301", "HOTP on touch is on", "Set HOTP status failed");
+    } else {
+      await adminTransceive("00400300", "HOTP on touch is off", "Set HOTP status failed");
+    }
+    setState(oldState => ({...oldState, hotp: hotpOn}));
   }, [adminTransceive]);
 
-  const setHotpOn = useCallback(async () => {
-    await adminTransceive("00400301", "HOTP on touch is on", "Set HOTP status failed");
-  }, [adminTransceive]);
-
-  const setHotpOff = useCallback(async () => {
-    await adminTransceive("00400300", "HOTP on touch is off", "Set HOTP status failed");
-  }, [adminTransceive]);
-
-  const setNDEFRO = useCallback(async () => {
-    await adminTransceive("00080100", "NDEF is RO", "Set NDEF status failed");
-  }, [adminTransceive]);
-
-  const setNDEFRW = useCallback(async () => {
-    await adminTransceive("00080000", "NDEF is RW", "Set NDEF status failed");
+  const setNDEFReadonly = useCallback(async (e) => {
+    let readonly = e.target.checked;
+    if (readonly) {
+      await adminTransceive("00080100", "NDEF is RO", "Set NDEF status failed");
+    } else {
+      await adminTransceive("00080000", "NDEF is RW", "Set NDEF status failed");
+    }
+    setState(oldState => ({...oldState, ndefReadonly: readonly}));
   }, [adminTransceive]);
 
   const resetOpenPGP = useCallback(async () => {
@@ -243,24 +261,15 @@ export default function Overview() {
                 </Typography>
                 <Typography variant="h6">
                   LED:
-                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
-                    <Button onClick={setLedOn}>ON</Button>
-                    <Button onClick={setLedOff}>OFF</Button>
-                  </ButtonGroup>
+                  <Switch checked={state.led} onChange={setLedStatus}/>
                 </Typography>
                 <Typography variant="h6">
                   HOTP on touch:
-                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
-                    <Button onClick={setHotpOn}>ON</Button>
-                    <Button onClick={setHotpOff}>OFF</Button>
-                  </ButtonGroup>
+                  <Switch checked={state.hotp} onChange={setHotpStatus}/>
                 </Typography>
                 <Typography variant="h6">
-                  Toggle NDEF RO/RW:
-                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
-                    <Button onClick={setNDEFRO}>RO</Button>
-                    <Button onClick={setNDEFRW}>RW</Button>
-                  </ButtonGroup>
+                  NDEF readonly:
+                  <Switch checked={state.ndefReadonly} onChange={setNDEFReadonly}/>
                 </Typography>
                 <Typography variant="h6">
                   Set OpenPGP SIG touch policy:
@@ -285,9 +294,10 @@ export default function Overview() {
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button variant="contained" onClick={onChangePin} > Change PIN </Button>
+                <Button variant="contained" onClick={onChangePin}> Change PIN </Button>
                 <Button variant="contained" onClick={enterDFU}>Enter DFU (development only)</Button>
-                <Button variant="contained" onClick={() => window.location = 'https://dfu.canokeys.org/'}>Go to Web DFU util</Button>
+                <Button variant="contained" onClick={() => window.location = 'https://dfu.canokeys.org/'}>Go to Web DFU
+                  util</Button>
               </CardActions>
             </Card>
             <Card className={classes.card}>
@@ -324,8 +334,8 @@ export default function Overview() {
             Authenticate
           </Button>
         </DialogActions>
-     </Dialog>
-     <Dialog open={chPinDialogOpen} onClose={() => setChPinDialogOpen(false)}>
+      </Dialog>
+      <Dialog open={chPinDialogOpen} onClose={() => setChPinDialogOpen(false)}>
         <DialogTitle> Enter new pin for Admin Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -343,7 +353,7 @@ export default function Overview() {
             Change Pin
           </Button>
         </DialogActions>
-     </Dialog>
+      </Dialog>
     </div>
   );
 }
