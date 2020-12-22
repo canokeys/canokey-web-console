@@ -178,7 +178,7 @@ export default function Apdu() {
     try {
       if (device === null) {
         if (!await dispatch(connect())) {
-          throw 'Cannot connect to Canokey';
+          throw 'Cannot connect to CanoKey';
         }
       }
 

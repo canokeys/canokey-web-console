@@ -28,8 +28,10 @@ export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
   const dispatch = useDispatch();
-  const [version, setVersion] = useState("Unknown");
   const [variant, setVariant] = useState("Unknown");
+  const [sn, setSn] = useState("Unknown");
+  const [id, setId] = useState("Unknown");
+  const [firmwareVersion, setFirmwareVersion] = useState("Unknown");
   const history = useHistory();
   const {enqueueSnackbar} = useSnackbar();
 
@@ -44,15 +46,25 @@ export default function Overview() {
           res = await dispatch(transceive("0031000000"));
           if (res.endsWith("9000")) {
             let version = hexStringToString(res.substring(0, res.length - 4));
-            setVersion(version);
+            setFirmwareVersion(version);
           }
           res = await dispatch(transceive("0031010000"));
           if (res.endsWith("9000")) {
             let variant = hexStringToString(res.substring(0, res.length - 4));
             setVariant(variant);
           }
+          res = await dispatch(transceive("0032000000"));
+          if (res.endsWith("9000")) {
+            let sn = res.substring(0, res.length - 4);
+            setSn(sn);
+          }
+          res = await dispatch(transceive("0032010000"));
+          if (res.endsWith("9000")) {
+            let id = res.substring(0, res.length - 4);
+            setId(id);
+          }
         } catch (err) {
-          enqueueSnackbar(`Failed to get Canokey version: ${err}`, {variant: "error"});
+          enqueueSnackbar(`Failed to get CanoKey version: ${err}`, {variant: "error"});
         }
       }
     })();
@@ -65,22 +77,10 @@ export default function Overview() {
           <Card>
             <CardContent>
               <Typography variant="h2">
-                Canokey Info
+                CanoKey Info
               </Typography>
               <Typography>
                 Connected: {device !== null ? 'true' : 'false'}
-              </Typography>
-              <Typography>
-                {
-                  device !== null ?
-                    `Firmware version: ${version}` : null
-                }
-              </Typography>
-              <Typography>
-                {
-                  device !== null ?
-                    `Variant: ${variant}` : null
-                }
               </Typography>
               <Typography>
                 {device !== null ? `Manufacturer: ${device.manufacturerName}` : null}
@@ -89,7 +89,16 @@ export default function Overview() {
                 {device !== null ? `Product: ${device.productName}` : null}
               </Typography>
               <Typography>
-                {device !== null ? `Serial Number: ${device.serialNumber}` : null}
+                {device !== null ? `Variant: ${variant}` : null}
+              </Typography>
+              <Typography>
+                {device !== null ? `Serial Number: ${sn}` : null}
+              </Typography>
+              <Typography>
+                {device !== null ? `Chip ID: ${id}` : null}
+              </Typography>
+              <Typography>
+                {device !== null ? `Firmware Version: ${firmwareVersion}` : null}
               </Typography>
               <Typography>
                 {device !== null ? `USB Version: ${device.usbVersionMajor}.${device.usbVersionMinor}` : null}
@@ -104,7 +113,7 @@ export default function Overview() {
                 Admin
               </Typography>
               <Typography>
-                Admin applet manages your Canokey.
+                Admin applet manages your CanoKey.
               </Typography>
             </CardContent>
             <CardActions>
@@ -119,7 +128,7 @@ export default function Overview() {
                 OATH
               </Typography>
               <Typography>
-                Canokey implements a custom OATH(Open AuTHentication) applet.
+                CanoKey implements a custom OATH(Open AuTHentication) applet.
               </Typography>
             </CardContent>
             <CardActions>
@@ -134,7 +143,7 @@ export default function Overview() {
                 OpenPGP
               </Typography>
               <Typography>
-                Canokey implements OpenPGP standard.
+                CanoKey implements OpenPGP standard.
               </Typography>
             </CardContent>
             <CardActions>
@@ -149,7 +158,7 @@ export default function Overview() {
                 PIV
               </Typography>
               <Typography>
-                Canokey implements PIV standard.
+                CanoKey implements PIV standard.
               </Typography>
             </CardContent>
             <CardActions>

@@ -91,7 +91,7 @@ export default function Oath() {
   const selectOathApplet = useCallback(async () => {
     if (device === null) {
       if (!await dispatch(connect())) {
-        throw 'Cannot connect to Canokey';
+        throw 'Cannot connect to CanoKey';
       }
     }
 

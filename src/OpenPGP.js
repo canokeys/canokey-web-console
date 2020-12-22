@@ -183,7 +183,7 @@ export default function OpenPGP() {
   const selectOpenPGPApplet = useCallback(async () => {
     if (device === null) {
       if (!(await dispatch(connect()))) {
-        throw new Error('Cannot connect to Canokey')
+        throw new Error('Cannot connect to CanoKey')
       }
     }
     let res = await dispatch(transceive('00A4040006d2760001240100'))
@@ -1290,7 +1290,7 @@ export default function OpenPGP() {
                   {keyState0 === '00'
                     ? 'Not Exist'
                     : keyState0 === '01'
-                    ? 'Created by Canokey'
+                    ? 'Created by CanoKey'
                     : 'Imported'}
                 </Typography>
                 <ButtonGroup
@@ -1333,7 +1333,7 @@ export default function OpenPGP() {
                   {keyState1 === '00'
                     ? 'Not Exist'
                     : keyState1 === '01'
-                    ? 'Created by Canokey'
+                    ? 'Created by CanoKey'
                     : 'Imported'}
                 </Typography>
                 <ButtonGroup
@@ -1376,7 +1376,7 @@ export default function OpenPGP() {
                   {keyState2 === '00'
                     ? 'Not Exist'
                     : keyState2 === '01'
-                    ? 'Created by Canokey'
+                    ? 'Created by CanoKey'
                     : 'Imported'}
                 </Typography>
                 <ButtonGroup
@@ -1417,7 +1417,7 @@ export default function OpenPGP() {
           <Card className={classes.card}>
             <CardContent>
               <Typography variant="h3">Password Management</Typography>
-              <Typography>Manage OpenPGP PIN and ManagementKey.</Typography>
+              <Typography>Manage OpenPGP PIN and Admin PIN.</Typography>
             </CardContent>
             <CardActions>
               <Button
@@ -1457,7 +1457,7 @@ export default function OpenPGP() {
         <DialogTitle> Enter PIN and MK to Authenticate</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter PIN and ManagementKey below.Please be aware of retry count.
+            Enter PIN and Admin PIN below. Please be aware of retry count.
             This will not be stored in browser.
           </DialogContentText>
           <TextField
@@ -1478,7 +1478,7 @@ export default function OpenPGP() {
           />
           <TextField
             error={!nowMKValid}
-            label="ManagementKey"
+            label="Admin PIN"
             type="password"
             fullWidth
             onKeyPress={onKeyPressMKAuthen}
@@ -1544,10 +1544,10 @@ export default function OpenPGP() {
           setChMKDialogOpen(false)
         }}
       >
-        <DialogTitle> Enter new ManagementKey for OpenPGP Applet</DialogTitle>
+        <DialogTitle> Enter new Admin PIN for OpenPGP Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter new ManagementKey for OpenPGP Applet.
+            Enter new Admin PIN for OpenPGP Applet.
           </DialogContentText>
           <TextField
             error={!newMKValid}

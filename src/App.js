@@ -70,7 +70,6 @@ export default function App() {
     }
   }, [enqueueSnackbar]);
 
-
   const showOverview = useCallback(e => {
     setDrawerOpen(false);
     history.push('/');
@@ -95,7 +94,7 @@ export default function App() {
     setDrawerOpen(false);
     history.push('/piv');
   }, [history]);
-  
+
   const showOpenPGP = useCallback(e => {
     setDrawerOpen(false);
     history.push('/openpgp');
@@ -170,7 +169,7 @@ export default function App() {
         <Route path="/apdu" exact component={Apdu}/>
         <Route path="/oath" exact component={Oath}/>
         <Route path="/piv" exact component={Piv}/>
-		<Route path="/openpgp" exact component={OpenPGP} />
+        <Route path="/openpgp" exact component={OpenPGP}/>
       </Switch>
     </div>
   );
