@@ -41,7 +41,9 @@ export default function Overview() {
   const authenticated = useSelector(state => state.adminAuthenticated);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [chPinDialogOpen, setChPinDialogOpen] = useState(false);
+  const [changeCacheTimeDialogOpen, setChangeCacheTimeDialogOpen] = useState(false);
   const [pin, setPin] = useState('');
+  const [cacheTime, setCacheTime] = useState(0);
   const [flashSpace, setFlashSpace] = useState('unknown');
   const [state, setState] = useState({
     led: false,
@@ -58,9 +60,12 @@ export default function Overview() {
     setPinDialogOpen(true);
   }, []);
 
-
   const onChangePin = useCallback(() => {
     setChPinDialogOpen(true);
+  }, []);
+
+  const onChangeCacheTime = useCallback(() => {
+    setChangeCacheTimeDialogOpen(true);
   }, []);
 
   const selectAdminApplet = useCallback(async () => {
@@ -144,24 +149,23 @@ export default function Overview() {
     try {
       let array = new TextEncoder().encode(pin);
       let len = new Uint8Array([array.length]);
-      await selectAdminApplet();
       let res = await dispatch(transceive(`00210000${byteToHexString(len)}${byteToHexString(array)}`, true));
       if (res.endsWith("9000")) {
         dispatch(setAdminAuthenticated(true));
         enqueueSnackbar('PIN changed', {variant: 'success'});
-        res = await dispatch(transceive("0041000000"));
-        if (res.endsWith("9000")) {
-          let used = parseInt(res.substring(0, 2), 16);
-          let total = parseInt(res.substring(2, 4), 16);
-          setFlashSpace(`${used} KiB / ${total} KiB`);
-        }
       } else {
         enqueueSnackbar('Change PIN failed', {variant: 'error'});
       }
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'});
     }
-  }, [pin, dispatch, enqueueSnackbar, selectAdminApplet]);
+  }, [pin, dispatch, enqueueSnackbar]);
+
+  const doChangeCacheTime = useCallback(async () => {
+    setChangeCacheTimeDialogOpen(false);
+    await adminTransceive(`000903${byteToHexString([cacheTime])}`, "Cache time changed", "Change cache time failed");
+    setState(oldState => ({...oldState, cacheTime: cacheTime}));
+  }, [cacheTime, adminTransceive]);
 
   const onKeyPress = useCallback(async (e) => {
     if (e.key === 'Enter') {
@@ -174,6 +178,12 @@ export default function Overview() {
       await doChangePin();
     }
   }, [doChangePin]);
+
+  const onKeyPressChangeCacheTime = useCallback(async (e) => {
+    if (e.key === 'Enter') {
+      await doChangeCacheTime();
+    }
+  }, [doChangeCacheTime]);
 
   const setLedStatus = useCallback(async (e) => {
     let ledOn = e.target.checked;
@@ -308,6 +318,10 @@ export default function Overview() {
                   OpenPGP AUT touch policy:
                   <Switch checked={state.autTouch} onChange={setAutTouch}/>
                 </Typography>
+                <Typography variant="h6">
+                  OpenPGP touch cache time: {state.cacheTime}
+                  <Button variant="contained" onClick={onChangeCacheTime}> Change </Button>
+                </Typography>
               </CardContent>
               <CardActions>
                 <Button variant="contained" onClick={onChangePin}> Change PIN </Button>
@@ -341,7 +355,7 @@ export default function Overview() {
           : null
       }
       <Dialog open={pinDialogOpen} onClose={() => setPinDialogOpen(false)}>
-        <DialogTitle> Enter PIN to Authenticate Admin Applet</DialogTitle>
+        <DialogTitle>Enter PIN to Authenticate Admin Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Enter PIN below. The default is 123456. Please be aware of PIN retry count. This will not be stored in
@@ -361,7 +375,7 @@ export default function Overview() {
         </DialogActions>
       </Dialog>
       <Dialog open={chPinDialogOpen} onClose={() => setChPinDialogOpen(false)}>
-        <DialogTitle> Enter new pin for Admin Applet</DialogTitle>
+        <DialogTitle>Enter new pin for Admin Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Enter new pin for Admin Applet.
@@ -376,6 +390,26 @@ export default function Overview() {
         <DialogActions>
           <Button color="primary" onClick={doChangePin}>
             Change Pin
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={changeCacheTimeDialogOpen} onClose={() => setChangeCacheTimeDialogOpen(false)}>
+        <DialogTitle>Enter new cache time</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter new cache time for OpenPGP touch (in seconds): 0 ~ 255.
+          </DialogContentText>
+          <TextField
+            type="number"
+            autoFocus
+            fullWidth
+            InputProps={{ inputProps: { min: 0, max: 255 } }}
+            onKeyPress={onKeyPressChangeCacheTime}
+            onChange={(e) => setCacheTime(parseInt(e.target.value))}/>
+        </DialogContent>
+        <DialogActions>
+          <Button color="primary" onClick={doChangeCacheTime}>
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>
