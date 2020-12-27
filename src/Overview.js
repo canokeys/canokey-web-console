@@ -128,7 +128,7 @@ export default function Overview() {
                 OATH
               </Typography>
               <Typography>
-                CanoKey implements a custom OATH(Open AuTHentication) applet.
+                CanoKey implements a custom OATH (Open AuTHentication) applet.
               </Typography>
             </CardContent>
             <CardActions>

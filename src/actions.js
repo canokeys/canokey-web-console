@@ -24,6 +24,7 @@ export function connect() {
     if (device !== undefined) {
       await device.open();
       await device.claimInterface(1);
+      await transceive_webusb(device, "00A4040005F000000000");
       dispatch(setDevice(device));
       dispatch(setAdminAuthenticated(false));
       navigator.usb.addEventListener('disconnect', event => {

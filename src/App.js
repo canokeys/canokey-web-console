@@ -1,22 +1,22 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import logo from './logo.png';
 import {
-  Toolbar,
   AppBar,
-  IconButton,
-  Typography,
+  Button,
+  Collapse,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Button,
-  Collapse,
+  Toolbar,
+  Typography,
 } from '@material-ui/core';
 import {Route, Switch, useHistory} from 'react-router-dom';
-import {useSelector, useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import MenuIcon from '@material-ui/icons/Menu';
 import HomeIcon from '@material-ui/icons/Home';
 import AppsIcon from '@material-ui/icons/Apps';
@@ -70,6 +70,20 @@ export default function App() {
     }
   }, [enqueueSnackbar]);
 
+  const connectUSB = useCallback(async () => {
+    try {
+      await dispatch(connect());
+    } catch (e) {
+      if (e.toString().indexOf("claim") >= 0) {
+        enqueueSnackbar(`Failed to connect the device. Make sure you've closed other tabs or browsers.`, {variant: "error"});
+      } else if (e.toString().indexOf("transfer") >= 0) {
+        enqueueSnackbar(`Failed to connect the device. Make sure you've killed the GPG daemon and other CCID applications.`, {variant: "error"});
+      } else {
+        enqueueSnackbar(`Failed to connect the device: ${e}`, {variant: "error"});
+      }
+    }
+  }, []);
+
   const showOverview = useCallback(e => {
     setDrawerOpen(false);
     history.push('/');
@@ -115,7 +129,7 @@ export default function App() {
               <Button variant="contained" onClick={() => dispatch(disconnect())}>
                 Disconnect
               </Button> :
-              <Button variant="contained" onClick={() => dispatch(connect())}>
+              <Button variant="contained" onClick={connectUSB}>
                 Connect
               </Button>
           }
