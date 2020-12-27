@@ -36,6 +36,7 @@ const useStyles = makeStyles((theme) => ({
 export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
+  const model = useSelector(state => state.model);
   const dispatch = useDispatch();
   const authenticated = useSelector(state => state.adminAuthenticated);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
@@ -45,7 +46,11 @@ export default function Overview() {
   const [state, setState] = useState({
     led: false,
     hotp: false,
-    ndefReadonly: false
+    ndefReadonly: false,
+    sigTouch: false,
+    decTouch: false,
+    autTouch: false,
+    cacheTime: 0
   });
   const {enqueueSnackbar} = useSnackbar();
 
@@ -99,18 +104,32 @@ export default function Overview() {
       } else if (res.endsWith("9000")) {
         dispatch(setAdminAuthenticated(true));
         enqueueSnackbar('PIN verification success', {variant: 'success'});
+        // read flash usage
         res = await dispatch(transceive("0041000000"));
         if (res.endsWith("9000")) {
           let used = parseInt(res.substring(0, 2), 16);
           let total = parseInt(res.substring(2, 4), 16);
           setFlashSpace(`${used} KiB / ${total} KiB`);
         }
+        // read configs
         res = await dispatch(transceive("0042000000"));
         if (res.endsWith("9000")) {
           let ledOn = res.substring(0, 2) === "01";
           let hotpOn = res.substring(2, 4) === "01";
           let ndefReadonly = res.substring(4, 6) === "01";
-          setState({led: ledOn, hotp: hotpOn, ndefReadonly: ndefReadonly});
+          let sigTouch = res.substring(6, 8) === "01";
+          let decTouch = res.substring(8, 10) === "01";
+          let autTouch = res.substring(10, 12) === "01";
+          let cacheTime = parseInt(res.substring(12, 14), 16);
+          setState({
+            led: ledOn,
+            hotp: hotpOn,
+            ndefReadonly: ndefReadonly,
+            sigTouch: sigTouch,
+            decTouch: decTouch,
+            autTouch: autTouch,
+            cacheTime: cacheTime
+          });
         }
       } else {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
@@ -207,28 +226,34 @@ export default function Overview() {
       "Enter DFU: WebUSB disconnected, device should be in DFU now");
   }, [adminTransceive]);
 
-  const setSIGtouchOn = useCallback(async () => {
-    await adminTransceive("00090001", "Set SIG touch policy REQUIRED", "Set SIG touch policy failed");
+  const setSigTouch = useCallback(async (e) => {
+    let touch = e.target.checked;
+    if (touch) {
+      await adminTransceive("00090001", "Set SIG touch policy REQUIRED", "Set SIG touch policy failed");
+    } else {
+      await adminTransceive("00090000", "Set SIG touch policy NO", "Set SIG touch policy failed");
+    }
+    setState(oldState => ({...oldState, sigTouch: touch}));
   }, [adminTransceive]);
 
-  const setSIGtouchOff = useCallback(async () => {
-    await adminTransceive("00090000", "Set SIG touch policy NO", "Set SIG touch policy failed");
+  const setDecTouch = useCallback(async (e) => {
+    let touch = e.target.checked;
+    if (touch) {
+      await adminTransceive("00090101", "Set DEC touch policy REQUIRED", "Set DEC touch policy failed");
+    } else {
+      await adminTransceive("00090100", "Set DEC touch policy NO", "Set DEC touch policy failed");
+    }
+    setState(oldState => ({...oldState, decTouch: touch}));
   }, [adminTransceive]);
 
-  const setDECtouchOn = useCallback(async () => {
-    await adminTransceive("00090101", "Set DEC touch policy REQUIRED", "Set DEC touch policy failed");
-  }, [adminTransceive]);
-
-  const setDECtouchOff = useCallback(async () => {
-    await adminTransceive("00090100", "Set DEC touch policy NO", "Set DEC touch policy failed");
-  }, [adminTransceive]);
-
-  const setAUTtouchOn = useCallback(async () => {
-    await adminTransceive("00090201", "Set AUT touch policy REQUIRED", "Set AUT touch policy failed");
-  }, [adminTransceive]);
-
-  const setAUTtouchOff = useCallback(async () => {
-    await adminTransceive("00090200", "Set AUT touch policy NO", "Set AUT touch policy failed");
+  const setAutTouch = useCallback(async (e) => {
+    let touch = e.target.checked;
+    if (touch) {
+      await adminTransceive("00090201", "Set AUT touch policy REQUIRED", "Set AUT touch policy failed");
+    } else {
+      await adminTransceive("00090200", "Set AUT touch policy NO", "Set AUT touch policy failed");
+    }
+    setState(oldState => ({...oldState, autTouch: touch}));
   }, [adminTransceive]);
 
   return (
@@ -272,32 +297,31 @@ export default function Overview() {
                   <Switch checked={state.ndefReadonly} onChange={setNDEFReadonly}/>
                 </Typography>
                 <Typography variant="h6">
-                  Set OpenPGP SIG touch policy:
-                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
-                    <Button onClick={setSIGtouchOn}>Required</Button>
-                    <Button onClick={setSIGtouchOff}>No</Button>
-                  </ButtonGroup>
+                  OpenPGP SIG touch policy:
+                  <Switch checked={state.sigTouch} onChange={setSigTouch}/>
                 </Typography>
                 <Typography variant="h6">
-                  Set OpenPGP DEC touch policy:
-                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
-                    <Button onClick={setDECtouchOn}>Required</Button>
-                    <Button onClick={setDECtouchOff}>No</Button>
-                  </ButtonGroup>
+                  OpenPGP DEC touch policy:
+                  <Switch checked={state.decTouch} onChange={setDecTouch}/>
                 </Typography>
                 <Typography variant="h6">
-                  Set OpenPGP AUT touch policy:
-                  <ButtonGroup variant="contained" className={classes.buttonGroup}>
-                    <Button onClick={setAUTtouchOn}>Required</Button>
-                    <Button onClick={setAUTtouchOff}>No</Button>
-                  </ButtonGroup>
+                  OpenPGP AUT touch policy:
+                  <Switch checked={state.autTouch} onChange={setAutTouch}/>
                 </Typography>
               </CardContent>
               <CardActions>
                 <Button variant="contained" onClick={onChangePin}> Change PIN </Button>
-                <Button variant="contained" onClick={enterDFU}>Enter DFU (development only)</Button>
-                <Button variant="contained" onClick={() => window.location = 'https://dfu.canokeys.org/'}>Go to Web DFU
-                  util</Button>
+                {
+                  model.toString().indexOf("STM32") >= 0 ?
+                    <div>
+                      <Button variant="contained" onClick={enterDFU}>Enter DFU (development only)</Button>
+                      <Button variant="contained" onClick={() => window.location = 'https://dfu.canokeys.org/'}>
+                        Go to Web DFU util
+                      </Button>
+                    </div>
+                    : null
+                }
+
               </CardActions>
             </Card>
             <Card className={classes.card}>
@@ -320,7 +344,8 @@ export default function Overview() {
         <DialogTitle> Enter PIN to Authenticate Admin Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter PIN below. Please be aware of PIN retry count. This will not be stored in browser.
+            Enter PIN below. The default is 123456. Please be aware of PIN retry count. This will not be stored in
+            browser.
           </DialogContentText>
           <TextField
             type="password"

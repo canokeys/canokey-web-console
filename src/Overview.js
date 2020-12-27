@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {makeStyles} from '@material-ui/core/styles';
-import {transceive} from './actions';
+import {setModel, transceive} from './actions';
 import {useHistory} from 'react-router-dom';
 import Typography from "@material-ui/core/Typography";
 import {hexStringToString} from "./util";
@@ -27,8 +27,8 @@ const useStyles = makeStyles((theme) => ({
 export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
+  const model = useSelector(state => state.model);
   const dispatch = useDispatch();
-  const [variant, setVariant] = useState("Unknown");
   const [sn, setSn] = useState("Unknown");
   const [id, setId] = useState("Unknown");
   const [firmwareVersion, setFirmwareVersion] = useState("Unknown");
@@ -50,8 +50,8 @@ export default function Overview() {
           }
           res = await dispatch(transceive("0031010000"));
           if (res.endsWith("9000")) {
-            let variant = hexStringToString(res.substring(0, res.length - 4));
-            setVariant(variant);
+            let model = hexStringToString(res.substring(0, res.length - 4));
+            dispatch(setModel(model));
           }
           res = await dispatch(transceive("0032000000"));
           if (res.endsWith("9000")) {
@@ -83,13 +83,7 @@ export default function Overview() {
                 Connected: {device !== null ? 'true' : 'false'}
               </Typography>
               <Typography>
-                {device !== null ? `Manufacturer: ${device.manufacturerName}` : null}
-              </Typography>
-              <Typography>
-                {device !== null ? `Product: ${device.productName}` : null}
-              </Typography>
-              <Typography>
-                {device !== null ? `Variant: ${variant}` : null}
+                {device !== null ? `Model: ${model}` : null}
               </Typography>
               <Typography>
                 {device !== null ? `Serial Number: ${sn}` : null}
@@ -99,9 +93,6 @@ export default function Overview() {
               </Typography>
               <Typography>
                 {device !== null ? `Firmware Version: ${firmwareVersion}` : null}
-              </Typography>
-              <Typography>
-                {device !== null ? `USB Version: ${device.usbVersionMajor}.${device.usbVersionMinor}` : null}
               </Typography>
             </CardContent>
           </Card>

@@ -5,9 +5,10 @@ export const TYPES = {
   SET_DEVICE: Symbol('SET_DEVICE'),
   APPEND_APDU_LOG: Symbol('APPEND_APDU_LOG'),
   SET_ADMIN_AUTHENTICATED: Symbol('SET_ADMIN_AUTHENTICATED'),
+  SET_MODEL: Symbol('SET_MODEL'),
 }
 
-export function setDevice(device) {
+function setDevice(device) {
   return {
     type: TYPES.SET_DEVICE,
     device
@@ -47,6 +48,13 @@ export function disconnect() {
   }
 }
 
+export function setModel(model) {
+  return {
+    type: TYPES.SET_MODEL,
+    model: model
+  }
+}
+
 export function setAdminAuthenticated(state) {
   return {
     type: TYPES.SET_ADMIN_AUTHENTICATED,
@@ -61,7 +69,6 @@ export function appendAPDULog(capdu, rapdu) {
     rapdu: rapdu.toUpperCase()
   }
 }
-
 
 async function transceive_webusb(device, capdu) {
   let data = hexStringToByte(capdu);
