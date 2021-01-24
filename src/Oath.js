@@ -165,7 +165,7 @@ export default function Oath() {
     } else if (keyEncoding === 'HEX') {
       keyArray = hexStringToByte(key);
     } else if (keyEncoding === 'Base32') {
-      keyArray = base32.decode.asBytes(key);
+      keyArray = base32.decode.asBytes(key.toUpperCase());
     } else {
       throw "Unsupported key encoding";
     }
