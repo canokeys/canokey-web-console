@@ -1254,7 +1254,11 @@ export default function OpenPGP() {
             <Card className={classes.card}>
               <CardContent>
                 <Typography variant="h3">OpenPGP Applet</Typography>
-                <Typography>url:{url}</Typography>
+              </CardContent>
+            </Card>
+            <Card className={classes.card}>
+              <CardContent>
+                <Typography>URL of public key: {url}</Typography>
               </CardContent>
               <CardActions>
                 <Button variant="contained" onClick={onChangeUrl}>
