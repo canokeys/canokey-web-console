@@ -643,9 +643,9 @@ export default function Piv() {
                   centered
                 >
                   <Tab label="Authentication" {...a11yProps(0)} />
-                  <Tab label="Digital Signature" {...a11yProps(1)} />
-                  <Tab label="Key Management" {...a11yProps(2)} />
-                  <Tab label="Card Authentication" {...a11yProps(3)} />
+                  <Tab label="Card Authentication" {...a11yProps(1)} />
+                  <Tab label="Digital Signature" {...a11yProps(2)} />
+                  <Tab label="Key Management" {...a11yProps(3)} />
                 </Tabs>
               </AppBar>
               <TabPanel value={tabValue} index={0}>
