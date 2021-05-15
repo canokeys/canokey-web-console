@@ -117,12 +117,20 @@ async function transceive_webusb(device, capdu) {
 export function transceive(capdu, is_secret) {
   return async (dispatch, getState) => {
     const {device} = getState();
-    let res = await transceive_webusb(device, capdu);
-    if (is_secret) {
-      dispatch(appendAPDULog('REDACTED', res));
-    } else {
-      dispatch(appendAPDULog(capdu, res));
-    }
-    return res;
+    let rapdu = '';
+    do {
+      let remain = rapdu.slice(-2);
+      if(remain !== '') {
+        capdu = "00060000" + remain; // get response
+        rapdu = rapdu.slice(0, -4);
+      }
+      rapdu += await transceive_webusb(device, capdu);
+      if (is_secret) {
+        dispatch(appendAPDULog('REDACTED', rapdu));
+      } else {
+        dispatch(appendAPDULog(capdu, rapdu));
+      }
+    } while(rapdu.slice(-4, -2) === "61");
+    return rapdu;
   };
 }
