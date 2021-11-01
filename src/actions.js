@@ -6,6 +6,7 @@ export const TYPES = {
   APPEND_APDU_LOG: Symbol('APPEND_APDU_LOG'),
   SET_ADMIN_AUTHENTICATED: Symbol('SET_ADMIN_AUTHENTICATED'),
   SET_MODEL: Symbol('SET_MODEL'),
+  SET_FIRMWARE_VERSION: Symbol('SET_FIRMWARE_VERSION'),
 }
 
 function setDevice(device) {
@@ -52,6 +53,13 @@ export function setModel(model) {
   return {
     type: TYPES.SET_MODEL,
     model: model
+  }
+}
+
+export function setFirmwareVersion(firmwareVersion) {
+  return {
+    type: TYPES.SET_FIRMWARE_VERSION,
+    firmwareVersion: firmwareVersion
   }
 }
 

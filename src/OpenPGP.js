@@ -33,6 +33,7 @@ import js_x509 from 'js-x509-utils'
 import keyutil from 'js-crypto-key-utils'
 import jseu from 'js-encoding-utils'
 import AwaitLock from 'await-lock'
+import {Switch} from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -106,12 +107,14 @@ function calMPIsLen(MPIs) {
 export default function OpenPGP() {
   const classes = useStyles()
   const device = useSelector((state) => state.device)
+  const firmwareVersion = useSelector(state => state.firmwareVersion);
   const dispatch = useDispatch()
   const {enqueueSnackbar} = useSnackbar()
   const [tabValue, setTabValue] = React.useState(0)
   const [chPinDialogOpen, setChPinDialogOpen] = useState(false)
   const [chMKDialogOpen, setChMKDialogOpen] = useState(false)
   const [chUrlDialogOpen, setChUrlDialogOpen] = useState(false)
+  const [changeCacheTimeDialogOpen, setChangeCacheTimeDialogOpen] = useState(false)
   const [oldPin, setOldPin] = useState('')
   const [newPin, setNewPin] = useState('')
   const [nowMK, setNowMK] = useState('')
@@ -143,6 +146,11 @@ export default function OpenPGP() {
   const [crtState0, setCrtState0] = useState(false)
   const [crtState1, setCrtState1] = useState(false)
   const [crtState2, setCrtState2] = useState(false)
+  const [sigTouch, setSigTouch] = useState(false)
+  const [decTouch, setDecTouch] = useState(false)
+  const [autTouch, setAutTouch] = useState(false)
+  const [cacheTime, setCacheTime] = useState(0)
+  const [tmpCacheTime, setTmpCacheTime] = useState(0)
   let slotPosition
   let algoSlot
   let keySlot
@@ -1126,10 +1134,10 @@ export default function OpenPGP() {
         transceive(`00240083${Len}${oldHexString}${newHexString}`, true)
       )
       if (res.endsWith('9000')) {
-        enqueueSnackbar('MK changed', {variant: 'success'})
+        enqueueSnackbar('Admin PIN changed', {variant: 'success'})
         setNowMK(newMK)
       } else {
-        enqueueSnackbar('Change MK failed', {variant: 'error'})
+        enqueueSnackbar('Change Admin PIN failed', {variant: 'error'})
       }
     } catch (err) {
       enqueueSnackbar(err.toString(), {variant: 'error'})
@@ -1237,6 +1245,87 @@ export default function OpenPGP() {
       await refresh()
     }
   }, [lock, urlInput, selectOpenPGPApplet, dispatch, enqueueSnackbar, refresh])
+
+  const onChangeSigTouch = useCallback(async (e) => {
+    let touch = e.target.checked
+    if (touch) {
+      let res = await dispatch(transceive(`00DA00D601`))
+      if (res.endsWith('9000')) {
+        enqueueSnackbar('Signature touch enabled', {variant: 'success'})
+      } else {
+        enqueueSnackbar('Change signature touch failed', {variant: 'error'})
+      }
+    } else {
+      let res = await dispatch(transceive(`00DA00D600`))
+      if (res.endsWith('9000')) {
+        enqueueSnackbar('Signature touch disabled', {variant: 'success'})
+      } else {
+        enqueueSnackbar('Change signature touch failed', {variant: 'error'})
+      }
+    }
+    setSigTouch(touch)
+  }, [setSigTouch, dispatch])
+
+  const onChangeDecTouch = useCallback(async (e) => {
+    let touch = e.target.checked
+    if (touch) {
+      let res = await dispatch(transceive(`00DA00D701`))
+      if (res.endsWith('9000')) {
+        enqueueSnackbar('Decryption touch enabled', {variant: 'success'})
+      } else {
+        enqueueSnackbar('Change decryption touch failed', {variant: 'error'})
+      }
+    } else {
+      let res = await dispatch(transceive(`00DA00D700`))
+      if (res.endsWith('9000')) {
+        enqueueSnackbar('Decryption touch disabled', {variant: 'success'})
+      } else {
+        enqueueSnackbar('Change decryption touch failed', {variant: 'error'})
+      }
+    }
+    setDecTouch(touch)
+  }, [setDecTouch, dispatch])
+
+  const onChangeAutTouch = useCallback(async (e) => {
+    let touch = e.target.checked
+    if (touch) {
+      let res = await dispatch(transceive(`00DA00D801`))
+      if (res.endsWith('9000')) {
+        enqueueSnackbar('Authentication touch enabled', {variant: 'success'})
+      } else {
+        enqueueSnackbar('Change authentication touch failed', {variant: 'error'})
+      }
+    } else {
+      let res = await dispatch(transceive(`00DA00D800`))
+      if (res.endsWith('9000')) {
+        enqueueSnackbar('Authentication touch disabled', {variant: 'success'})
+      } else {
+        enqueueSnackbar('Change authentication touch failed', {variant: 'error'})
+      }
+    }
+    setAutTouch(touch)
+  }, [setAutTouch, dispatch])
+
+  const onChangeCacheTime = useCallback(() => {
+    setChangeCacheTimeDialogOpen(true)
+  }, [])
+
+  const doChangeCacheTime = useCallback(async () => {
+    setChangeCacheTimeDialogOpen(false);
+    let res = await dispatch(transceive(`00DA010101${byteToHexString([tmpCacheTime])}`))
+    if (res.endsWith('9000')) {
+      enqueueSnackbar('Cache time changed', {variant: 'success'})
+    } else {
+      enqueueSnackbar('Change cache time failed', {variant: 'error'})
+    }
+    setCacheTime(tmpCacheTime)
+  }, [setCacheTime, dispatch, tmpCacheTime])
+
+  const onKeyPressChangeCacheTime = useCallback(async (e) => {
+    if (e.key === 'Enter') {
+      await doChangeCacheTime()
+    }
+  }, [doChangeCacheTime])
 
   const onKeyPressChUrl = useCallback(
     async (e) => {
@@ -1415,6 +1504,34 @@ export default function OpenPGP() {
                 </ButtonGroup>
               </TabPanel>
             </Card>
+            {
+              firmwareVersion.toString() >= "1.5" ?
+                <Card className={classes.card}>
+                  <CardContent>
+                    <Typography variant="h3">Touch Policy</Typography>
+                    <Typography>Manage OpenPGP Touch Policies</Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Typography variant="h6">
+                      OpenPGP SIG touch policy:
+                      <Switch checked={sigTouch} onChange={onChangeSigTouch}/>
+                    </Typography>
+                    <Typography variant="h6">
+                      OpenPGP DEC touch policy:
+                      <Switch checked={decTouch} onChange={onChangeDecTouch}/>
+                    </Typography>
+                    <Typography variant="h6">
+                      OpenPGP AUT touch policy:
+                      <Switch checked={autTouch} onChange={onChangeAutTouch}/>
+                    </Typography>
+                    <Typography variant="h6">
+                      OpenPGP touch cache time: {cacheTime} seconds
+                      <Button variant="contained" onClick={onChangeCacheTime}> Change </Button>
+                    </Typography>
+                  </CardActions>
+                </Card>
+              : null
+            }
           </Grid>
         ) : null}
         <Grid item xs={12} md={12}>
@@ -1458,10 +1575,10 @@ export default function OpenPGP() {
         open={MKAuthenDialogOpen}
         onClose={() => setMKAuthenDialogOpen(false)}
       >
-        <DialogTitle> Enter PIN and MK to Authenticate</DialogTitle>
+        <DialogTitle> Enter PIN and Admin PIN to Authenticate</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter PIN and Admin PIN below. Please be aware of retry count.
+            Enter PIN (default: 123456) and Admin PIN (default: 12345678) below. Please be aware of retry count.
             This will not be stored in browser.
           </DialogContentText>
           <TextField
@@ -1781,6 +1898,26 @@ export default function OpenPGP() {
         <DialogActions>
           <Button color="primary" onClick={doChangeUrl}>
             Change Url
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={changeCacheTimeDialogOpen} onClose={() => setChangeCacheTimeDialogOpen(false)}>
+        <DialogTitle>Enter new cache time</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter new cache time for OpenPGP touch (in seconds): 0 ~ 255.
+          </DialogContentText>
+          <TextField
+            type="number"
+            autoFocus
+            fullWidth
+            InputProps={{ inputProps: { min: 0, max: 255 } }}
+            onKeyPress={onKeyPressChangeCacheTime}
+            onChange={(e) => setTmpCacheTime(parseInt(e.target.value))}/>
+        </DialogContent>
+        <DialogActions>
+          <Button color="primary" onClick={doChangeCacheTime}>
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {makeStyles} from '@material-ui/core/styles';
-import {setModel, transceive} from './actions';
+import {setFirmwareVersion, setModel, transceive} from './actions';
 import {useHistory} from 'react-router-dom';
 import Typography from "@material-ui/core/Typography";
 import {hexStringToString} from "./util";
@@ -28,10 +28,10 @@ export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
   const model = useSelector(state => state.model);
+  const firmwareVersion = useSelector(state => state.firmwareVersion);
   const dispatch = useDispatch();
   const [sn, setSn] = useState("Unknown");
   const [id, setId] = useState("Unknown");
-  const [firmwareVersion, setFirmwareVersion] = useState("Unknown");
   const history = useHistory();
   const {enqueueSnackbar} = useSnackbar();
 
@@ -46,7 +46,7 @@ export default function Overview() {
           res = await dispatch(transceive("0031000000"));
           if (res.endsWith("9000")) {
             let version = hexStringToString(res.substring(0, res.length - 4));
-            setFirmwareVersion(version);
+            dispatch(setFirmwareVersion(version));
           }
           res = await dispatch(transceive("0031010000"));
           if (res.endsWith("9000")) {

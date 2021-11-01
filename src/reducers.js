@@ -18,6 +18,13 @@ export function model(state = '', action) {
   return state;
 }
 
+export function firmwareVersion(state = '', action) {
+  if (action.type === TYPES.SET_FIRMWARE_VERSION) {
+    return action.firmwareVersion;
+  }
+  return state;
+}
+
 export function apduLog(state = List(), action) {
   if (action.type === TYPES.APPEND_APDU_LOG) {
     return state.push({

@@ -15,7 +15,6 @@ import DialogActions from "@material-ui/core/DialogActions";
 import {connect, setAdminAuthenticated, transceive} from "./actions";
 import {byteToHexString} from "./util";
 import {useSnackbar} from "notistack";
-import ButtonGroup from "@material-ui/core/ButtonGroup";
 import {Switch} from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
@@ -37,6 +36,7 @@ export default function Overview() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
   const model = useSelector(state => state.model);
+  const firmwareVersion = useSelector(state => state.firmwareVersion);
   const dispatch = useDispatch();
   const authenticated = useSelector(state => state.adminAuthenticated);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
@@ -52,7 +52,9 @@ export default function Overview() {
     sigTouch: false,
     decTouch: false,
     autTouch: false,
-    cacheTime: 0
+    cacheTime: 0,
+    ndefEnabled: false,
+    webusbLandingEnabled: false
   });
   const {enqueueSnackbar} = useSnackbar();
 
@@ -119,22 +121,37 @@ export default function Overview() {
         // read configs
         res = await dispatch(transceive("0042000000"));
         if (res.endsWith("9000")) {
-          let ledOn = res.substring(0, 2) === "01";
-          let hotpOn = res.substring(2, 4) === "01";
-          let ndefReadonly = res.substring(4, 6) === "01";
-          let sigTouch = res.substring(6, 8) === "01";
-          let decTouch = res.substring(8, 10) === "01";
-          let autTouch = res.substring(10, 12) === "01";
-          let cacheTime = parseInt(res.substring(12, 14), 16);
-          setState({
-            led: ledOn,
-            hotp: hotpOn,
-            ndefReadonly: ndefReadonly,
-            sigTouch: sigTouch,
-            decTouch: decTouch,
-            autTouch: autTouch,
-            cacheTime: cacheTime
-          });
+          if (firmwareVersion.toString() < "1.5") {
+            let ledOn = res.substring(0, 2) === "01";
+            let hotpOn = res.substring(2, 4) === "01";
+            let ndefReadonly = res.substring(4, 6) === "01";
+            let sigTouch = res.substring(6, 8) === "01";
+            let decTouch = res.substring(8, 10) === "01";
+            let autTouch = res.substring(10, 12) === "01";
+            let cacheTime = parseInt(res.substring(12, 14), 16);
+            setState({
+              led: ledOn,
+              hotp: hotpOn,
+              ndefReadonly: ndefReadonly,
+              sigTouch: sigTouch,
+              decTouch: decTouch,
+              autTouch: autTouch,
+              cacheTime: cacheTime
+            });
+          } else {
+            let ledOn = res.substring(0, 2) === "01";
+            let hotpOn = res.substring(2, 4) === "01";
+            let ndefReadonly = res.substring(4, 6) === "01";
+            let ndefEnabled = res.substring(6, 8) === "01";
+            let webusbLandingEnabled = res.substring(8, 10) === "01";
+            setState({
+              led: ledOn,
+              hotp: hotpOn,
+              ndefReadonly: ndefReadonly,
+              ndefEnabled: ndefEnabled,
+              webusbLandingEnabled: webusbLandingEnabled
+            });
+          }
         }
       } else {
         enqueueSnackbar('PIN verification failed', {variant: 'error'});
@@ -213,6 +230,26 @@ export default function Overview() {
       await adminTransceive("00080000", "NDEF is RW", "Set NDEF status failed");
     }
     setState(oldState => ({...oldState, ndefReadonly: readonly}));
+  }, [adminTransceive]);
+
+  const setNDEFStatus = useCallback(async (e) => {
+    let enabled = e.target.checked;
+    if (enabled) {
+      await adminTransceive("00400401", "NDEF is enabled", "Set NDEF status failed");
+    } else {
+      await adminTransceive("00400400", "NDEF is disabled", "Set NDEF status failed");
+    }
+    setState(oldState => ({...oldState, ndefEnabled: enabled}));
+  }, [adminTransceive]);
+
+  const setWebUSBLandingStatus = useCallback(async (e) => {
+    let enabled = e.target.checked;
+    if (enabled) {
+      await adminTransceive("00400501", "WebUSB prompt is enabled", "Set WebUSB prompt failed");
+    } else {
+      await adminTransceive("00400500", "WebUSB prompt disabled", "Set WebUSB prompt failed");
+    }
+    setState(oldState => ({...oldState, ndefEnabled: enabled}));
   }, [adminTransceive]);
 
   const resetOpenPGP = useCallback(async () => {
@@ -306,22 +343,37 @@ export default function Overview() {
                   NDEF readonly:
                   <Switch checked={state.ndefReadonly} onChange={setNDEFReadonly}/>
                 </Typography>
-                <Typography variant="h6">
-                  OpenPGP SIG touch policy:
-                  <Switch checked={state.sigTouch} onChange={setSigTouch}/>
-                </Typography>
-                <Typography variant="h6">
-                  OpenPGP DEC touch policy:
-                  <Switch checked={state.decTouch} onChange={setDecTouch}/>
-                </Typography>
-                <Typography variant="h6">
-                  OpenPGP AUT touch policy:
-                  <Switch checked={state.autTouch} onChange={setAutTouch}/>
-                </Typography>
-                <Typography variant="h6">
-                  OpenPGP touch cache time: {state.cacheTime}
-                  <Button variant="contained" onClick={onChangeCacheTime}> Change </Button>
-                </Typography>
+                {
+                  firmwareVersion.toString() < "1.5" ?
+                    <div>
+                      <Typography variant="h6">
+                        OpenPGP SIG touch policy:
+                        <Switch checked={state.sigTouch} onChange={setSigTouch}/>
+                      </Typography>
+                      <Typography variant="h6">
+                      OpenPGP DEC touch policy:
+                      <Switch checked={state.decTouch} onChange={setDecTouch}/>
+                      </Typography>
+                      <Typography variant="h6">
+                      OpenPGP AUT touch policy:
+                      <Switch checked={state.autTouch} onChange={setAutTouch}/>
+                      </Typography>
+                      <Typography variant="h6">
+                      OpenPGP touch cache time: {state.cacheTime}
+                      <Button variant="contained" onClick={onChangeCacheTime}> Change </Button>
+                      </Typography>
+                    </div> :
+                    <div>
+                      <Typography variant="h6">
+                        NDEF enabled:
+                        <Switch checked={state.ndefEnabled} onChange={setNDEFStatus}/>
+                      </Typography>
+                      <Typography variant="h6">
+                        WebUSB prompt enabled:
+                        <Switch checked={state.webusbLandingEnabled} onChange={setWebUSBLandingStatus}/>
+                      </Typography>
+                    </div>
+                }
               </CardContent>
               <CardActions>
                 <Button variant="contained" onClick={onChangePin}> Change PIN </Button>
