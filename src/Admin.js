@@ -249,7 +249,7 @@ export default function Overview() {
     } else {
       await adminTransceive("00400500", "WebUSB prompt disabled", "Set WebUSB prompt failed");
     }
-    setState(oldState => ({...oldState, ndefEnabled: enabled}));
+    setState(oldState => ({...oldState, webusbLandingEnabled: enabled}));
   }, [adminTransceive]);
 
   const resetOpenPGP = useCallback(async () => {
