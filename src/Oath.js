@@ -103,7 +103,7 @@ export default function Oath() {
 
   const fetchEntries = useCallback(async () => {
     await selectOathApplet();
-    let res = await dispatch(transceive("0003000000"));
+    let res = await dispatch(transceive("0003000000", false, true));
     if (!res.endsWith("9000")) {
       throw 'Failed to list OATH credentials';
     }

@@ -122,14 +122,18 @@ async function transceive_webusb(device, capdu) {
   return '';
 }
 
-export function transceive(capdu, is_secret) {
+export function transceive(capdu, is_secret, in_oath) {
   return async (dispatch, getState) => {
     const {device} = getState();
     let rapdu = '';
     do {
       let remain = rapdu.slice(-2);
-      if(remain !== '') {
-        capdu = "00060000" + remain; // get response
+      if(remain !== '') { // get response
+        if (in_oath) {
+          capdu = `00060000${remain}`;
+        } else {
+          capdu = `00C00000${remain}`;
+        }
         rapdu = rapdu.slice(0, -4);
       }
       rapdu += await transceive_webusb(device, capdu);
