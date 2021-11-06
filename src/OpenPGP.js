@@ -1312,7 +1312,7 @@ export default function OpenPGP() {
 
   const doChangeCacheTime = useCallback(async () => {
     setChangeCacheTimeDialogOpen(false);
-    let res = await dispatch(transceive(`00DA010101${byteToHexString([tmpCacheTime])}`))
+    let res = await dispatch(transceive(`00DA010201${byteToHexString([tmpCacheTime])}`))
     if (res.endsWith('9000')) {
       enqueueSnackbar('Cache time changed', {variant: 'success'})
     } else {
