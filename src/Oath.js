@@ -1,10 +1,10 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import {useDispatch, useSelector} from "react-redux";
 import Grid from "@material-ui/core/Grid";
 import {useSnackbar} from "notistack";
-import {connect, transceive} from "./actions";
-import {byteToHexString, hexStringToByte} from "./util";
+import {connect, setFirmwareVersion, transceive} from "./actions";
+import {byteToHexString, hexStringToByte, hexStringToString} from "./util";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
@@ -37,6 +37,8 @@ import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import AddIcon from "@material-ui/icons/Add";
 import AvTimerIcon from "@material-ui/icons/AvTimer";
 import * as base32 from "hi-base32";
+import pbkdf2Hmac from "pbkdf2-hmac";
+import jsSHA from "jssha";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -74,9 +76,15 @@ function parseTLV(tlv) {
 export default function Oath() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
+  const firmwareVersion = useSelector(state => state.firmwareVersion);
   const dispatch = useDispatch();
   const {enqueueSnackbar} = useSnackbar();
   const [entries, setEntries] = useState([]);
+  const [passphraseDialogOpen, setPassphraseDialogOpen] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [passphrase, setPassphrase] = useState('');
+  const salt = useRef('');
+  const challenge = useRef('');
 
   // add
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -88,21 +96,11 @@ export default function Oath() {
   const [onlyIncreasing, setOnlyIncreasing] = useState(false);
   const [requireTouch, setRequireTouch] = useState(false);
 
-  const selectOathApplet = useCallback(async () => {
-    if (device === null) {
-      if (!await dispatch(connect())) {
-        throw 'Cannot connect to CanoKey';
-      }
-    }
+  function isOldProtocol() {
+    return firmwareVersion < "1.5";
+  }
 
-    let res = await dispatch(transceive("00A4040007A0000005272101"));
-    if (!res.endsWith("9000")) {
-      throw 'Selecting oath applet failed';
-    }
-  }, [device, dispatch]);
-
-  const fetchEntries = useCallback(async () => {
-    await selectOathApplet();
+  async function doList() {
     let res = await dispatch(transceive("0003000000", false, true));
     if (!res.endsWith("9000")) {
       throw 'Failed to list OATH credentials';
@@ -140,7 +138,72 @@ export default function Oath() {
       })
     }
     setEntries(entries);
-  }, [dispatch, selectOathApplet]);
+  }
+
+  const doAuthenticate = useCallback(async () => {
+    const key = await pbkdf2Hmac(passphrase, hexStringToByte(salt), 1000, 16, 'SHA-1');
+    const shaObj = new jsSHA("SHA-1", "HEX", {
+      hmacKey: { value: key, format: "ARRAYBUFFER" },
+    });
+    shaObj.update(challenge.current);
+    const response = shaObj.getHash("HEX");
+    let res = await dispatch(transceive(`00A30000207514${response}7408${challenge.current}`));
+    if (!res.endsWith("9000")) {
+      throw 'Invalid passphrase';
+    } else {
+      setAuthenticated(true);
+    }
+  }, [dispatch, enqueueSnackbar, setAuthenticated]);
+
+  const onKeyPress = useCallback(async (e) => {
+    if (e.key === 'Enter') {
+      await doAuthenticate();
+    }
+  }, [doAuthenticate]);
+
+  const selectOathApplet = useCallback(async () => {
+    if (device === null) {
+      if (!await dispatch(connect())) {
+        throw 'Cannot connect to CanoKey';
+      }
+    }
+
+    if (firmwareVersion === '') {
+      let res = await dispatch(transceive("00A4040005F000000000"));
+      if (!res.endsWith("9000")) {
+        throw 'Selecting admin applet failed';
+      }
+      res = await dispatch(transceive("0031000000"));
+      if (res.endsWith("9000")) {
+        let version = hexStringToString(res.substring(0, res.length - 4));
+        dispatch(setFirmwareVersion(version));
+      }
+    }
+
+    let res = await dispatch(transceive("00A4040007A0000005272101"));
+    if (!res.endsWith("9000")) {
+      throw 'Selecting oath applet failed';
+    }
+    if (!isOldProtocol()) { // check if there is a password
+      let tlv = parseTLV(hexStringToByte(res.substring(0, res.length - 4)));
+      if (tlv.length !== 4) {
+        setAuthenticated(true);
+        return;
+      }
+      salt.current = byteToHexString(tlv[1].value);
+      challenge.current = byteToHexString(tlv[2].value);
+      setPassphraseDialogOpen(true);
+    } else {
+      setAuthenticated(true);
+    }
+  }, [device, dispatch, setPassphraseDialogOpen, setAuthenticated, setFirmwareVersion, firmwareVersion]);
+
+  const fetchEntries = useCallback(async () => {
+    await selectOathApplet();
+    if (authenticated) {
+      await doList();
+    }
+  }, [dispatch, selectOathApplet, authenticated]);
 
   const refresh = useCallback(async () => {
     try {
@@ -284,7 +347,9 @@ export default function Oath() {
         let num = new DataView(arr.buffer).getUint32(0, false) % 1000000;
         let totp = num.toString().padStart(6, '0');
         let action = key => (
-          <Button onClick={() => { navigator.clipboard.writeText(totp) }}>
+          <Button onClick={() => {
+            navigator.clipboard.writeText(totp)
+          }}>
             COPY
           </Button>
         );
@@ -507,6 +572,25 @@ export default function Oath() {
           </Button>
           <Button variant="contained" color="primary" onClick={doAdd}>
             Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={passphraseDialogOpen} onClose={() => setPassphraseDialogOpen(false)}>
+        <DialogTitle>Enter Passphrase to Authenticate OATH Applet</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter your passphrase below.
+          </DialogContentText>
+          <TextField
+            type="password"
+            autoFocus
+            fullWidth
+            onKeyPress={onKeyPress}
+            onChange={(e) => setPassphrase(e.target.value)}/>
+        </DialogContent>
+        <DialogActions>
+          <Button color="primary" onClick={doAuthenticate}>
+            Authenticate
           </Button>
         </DialogActions>
       </Dialog>

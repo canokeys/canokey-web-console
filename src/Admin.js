@@ -12,8 +12,8 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import TextField from "@material-ui/core/TextField";
 import DialogActions from "@material-ui/core/DialogActions";
-import {connect, setAdminAuthenticated, transceive} from "./actions";
-import {byteToHexString} from "./util";
+import {connect, setAdminAuthenticated, setFirmwareVersion, transceive} from "./actions";
+import {byteToHexString, hexStringToString} from "./util";
 import {useSnackbar} from "notistack";
 import {Switch} from "@material-ui/core";
 
@@ -76,10 +76,16 @@ export default function Overview() {
         throw 'Cannot connect to CanoKey';
       }
     }
-
     let res = await dispatch(transceive("00A4040005F000000000"));
     if (!res.endsWith("9000")) {
       throw 'Selecting admin applet failed';
+    }
+    if (firmwareVersion === '') {
+      res = await dispatch(transceive("0031000000"));
+      if (res.endsWith("9000")) {
+        let version = hexStringToString(res.substring(0, res.length - 4));
+        dispatch(setFirmwareVersion(version));
+      }
     }
   }, [device, dispatch]);
 
