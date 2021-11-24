@@ -96,54 +96,85 @@ export default function Oath() {
   const [onlyIncreasing, setOnlyIncreasing] = useState(false);
   const [requireTouch, setRequireTouch] = useState(false);
 
-  function isOldProtocol() {
+  function isOldProtocol(firmwareVersion) {
     return firmwareVersion < "1.5";
   }
 
   async function doList() {
-    let res = await dispatch(transceive("0003000000", false, true));
+    let cmd = isOldProtocol(firmwareVersion) ? '0003000000' : '00A1000000';
+    let res = await dispatch(transceive(cmd, false, true));
     if (!res.endsWith("9000")) {
       throw 'Failed to list OATH credentials';
     }
     let tlv = parseTLV(hexStringToByte(res.substring(0, res.length - 4)));
-    if (tlv.length % 2 === 1) {
-      throw 'Invalid length of TLV';
-    }
     let entries = [];
-    for (let i = 0; i < tlv.length; i += 2) {
-      if (tlv[i].tag !== 0x71 || tlv[i + 1].tag !== 0x75) {
-        throw 'Bad tag in tlv'
+    if (isOldProtocol(firmwareVersion)) {
+      if (tlv.length % 2 === 1) {
+        throw 'Invalid length of TLV';
       }
+      for (let i = 0; i < tlv.length; i += 2) {
+        if (tlv[i].tag !== 0x71 || tlv[i + 1].tag !== 0x75) {
+          throw 'Bad tag in tlv'
+        }
 
-      let rawType = tlv[i + 1].value[0] >> 4;
-      let type = 'unknown';
-      if (rawType === 0x1) {
-        type = 'HOTP';
-      } else if (rawType === 0x2) {
-        type = 'TOTP';
+        let rawType = tlv[i + 1].value[0] >> 4;
+        let type = 'unknown';
+        if (rawType === 0x1) {
+          type = 'HOTP';
+        } else if (rawType === 0x2) {
+          type = 'TOTP';
+        }
+
+        let rawAlgo = tlv[i + 1].value[0] & 0xF;
+        let algo = 'unknown';
+        if (rawAlgo === 0x1) {
+          algo = 'HMAC-SHA1';
+        } else if (rawAlgo === 0x2) {
+          algo = 'HMAC-SHA256';
+        }
+
+        entries.push({
+          name: new TextDecoder("utf-8").decode(tlv[i].value),
+          type,
+          algo,
+        })
       }
+    } else {
+      for (let i = 0; i < tlv.length; ++i) {
+        if (tlv[i].tag !== 0x72) {
+          throw 'Bad tag in tlv'
+        }
 
-      let rawAlgo = tlv[i + 1].value[0] & 0xF;
-      let algo = 'unknown';
-      if (rawAlgo === 0x1) {
-        algo = 'HMAC-SHA1';
-      } else if (rawAlgo === 0x2) {
-        algo = 'HMAC-SHA256';
+        let rawType = tlv[i].value[0] >> 4;
+        let type = 'unknown';
+        if (rawType === 0x1) {
+          type = 'HOTP';
+        } else if (rawType === 0x2) {
+          type = 'TOTP';
+        }
+
+        let rawAlgo = tlv[i].value[0] & 0xF;
+        let algo = 'unknown';
+        if (rawAlgo === 0x1) {
+          algo = 'HMAC-SHA1';
+        } else if (rawAlgo === 0x2) {
+          algo = 'HMAC-SHA256';
+        }
+
+        entries.push({
+          name: new TextDecoder("utf-8").decode(tlv[i].value.slice(1)),
+          type,
+          algo,
+        })
       }
-
-      entries.push({
-        name: new TextDecoder("utf-8").decode(tlv[i].value),
-        type,
-        algo,
-      })
     }
     setEntries(entries);
   }
 
   const doAuthenticate = useCallback(async () => {
-    const key = await pbkdf2Hmac(passphrase, hexStringToByte(salt), 1000, 16, 'SHA-1');
+    const key = await pbkdf2Hmac(passphrase, hexStringToByte(salt.current), 1000, 16, 'SHA-1');
     const shaObj = new jsSHA("SHA-1", "HEX", {
-      hmacKey: { value: key, format: "ARRAYBUFFER" },
+      hmacKey: {value: key, format: "ARRAYBUFFER"},
     });
     shaObj.update(challenge.current);
     const response = shaObj.getHash("HEX");
@@ -152,8 +183,9 @@ export default function Oath() {
       throw 'Invalid passphrase';
     } else {
       setAuthenticated(true);
+      setPassphraseDialogOpen(false);
     }
-  }, [dispatch, enqueueSnackbar, setAuthenticated]);
+  }, [dispatch, enqueueSnackbar, setAuthenticated, passphrase]);
 
   const onKeyPress = useCallback(async (e) => {
     if (e.key === 'Enter') {
@@ -168,6 +200,7 @@ export default function Oath() {
       }
     }
 
+    let version = firmwareVersion;
     if (firmwareVersion === '') {
       let res = await dispatch(transceive("00A4040005F000000000"));
       if (!res.endsWith("9000")) {
@@ -175,7 +208,7 @@ export default function Oath() {
       }
       res = await dispatch(transceive("0031000000"));
       if (res.endsWith("9000")) {
-        let version = hexStringToString(res.substring(0, res.length - 4));
+        version = hexStringToString(res.substring(0, res.length - 4));
         dispatch(setFirmwareVersion(version));
       }
     }
@@ -184,7 +217,7 @@ export default function Oath() {
     if (!res.endsWith("9000")) {
       throw 'Selecting oath applet failed';
     }
-    if (!isOldProtocol()) { // check if there is a password
+    if (!isOldProtocol(version)) { // check if there is a password
       let tlv = parseTLV(hexStringToByte(res.substring(0, res.length - 4)));
       if (tlv.length !== 4) {
         setAuthenticated(true);
@@ -198,12 +231,15 @@ export default function Oath() {
     }
   }, [device, dispatch, setPassphraseDialogOpen, setAuthenticated, setFirmwareVersion, firmwareVersion]);
 
-  const fetchEntries = useCallback(async () => {
-    await selectOathApplet();
-    if (authenticated) {
-      await doList();
-    }
-  }, [dispatch, selectOathApplet, authenticated]);
+  const fetchEntries = useCallback(() => {
+    setAuthenticated(false); // Reset authenticated state
+    selectOathApplet(); // Fire-and-forget;
+  }, [dispatch, selectOathApplet]);
+
+  // Trigger on posedge of `authenticated`
+  useEffect(() => {
+    if (authenticated) doList();
+  }, [authenticated, doList]);
 
   const refresh = useCallback(async () => {
     try {
@@ -298,7 +334,7 @@ export default function Oath() {
 
   const doSetDefault = useCallback(async (name) => {
     try {
-      await selectOathApplet();
+      // await selectOathApplet();
       let data = [];
       // name
       data.push(0x71);
@@ -321,7 +357,6 @@ export default function Oath() {
 
   const doCalculate = useCallback(async (name) => {
     try {
-      await selectOathApplet();
       let data = [];
       // name
       data.push(0x71);
@@ -340,7 +375,8 @@ export default function Oath() {
       // lc
       data.unshift(data.length);
 
-      let res = await dispatch(transceive(`00040000${byteToHexString(data)}`));
+      let cmd = isOldProtocol(firmwareVersion) ? '04' : 'A2';
+      let res = await dispatch(transceive(`00${cmd}0000${byteToHexString(data)}`));
       if (res.endsWith("9000")) {
         // 32bit integer
         let arr = hexStringToByte(res.substr(6, 8));
@@ -471,11 +507,15 @@ export default function Oath() {
                                 </IconButton>
                               </Tooltip>
                           }
-                          <Tooltip title="Delete forever">
-                            <IconButton onClick={() => doDelete(entry.name)}>
-                              <DeleteForeverIcon/>
-                            </IconButton>
-                          </Tooltip>
+                          {
+                            isOldProtocol(firmwareVersion) ?
+                              <Tooltip title="Delete forever">
+                                <IconButton onClick={() => doDelete(entry.name)}>
+                                  <DeleteForeverIcon/>
+                                </IconButton>
+                              </Tooltip>
+                              : null
+                          }
                         </TableCell>
                       </TableRow>
                     ))}
@@ -491,13 +531,17 @@ export default function Oath() {
                 </Table>
               </TableContainer>
             </CardContent>
-            <CardActions>
-              <Tooltip title="Add a new OATH credential">
-                <IconButton onClick={() => setAddDialogOpen(true)}>
-                  <AddIcon/>
-                </IconButton>
-              </Tooltip>
-            </CardActions>
+            {
+              isOldProtocol(firmwareVersion) ?
+                <CardActions>
+                  <Tooltip title="Add a new OATH credential">
+                    <IconButton onClick={() => setAddDialogOpen(true)}>
+                      <AddIcon/>
+                    </IconButton>
+                  </Tooltip>
+                </CardActions>
+                : null
+            }
           </Card>
         </Grid>
       </Grid>
