@@ -73,6 +73,10 @@ function parseTLV(tlv) {
   return res;
 }
 
+function isOldProtocol(firmwareVersion) {
+  return firmwareVersion < "1.5";
+}
+
 export default function Oath() {
   const classes = useStyles();
   const device = useSelector(state => state.device);
@@ -96,11 +100,7 @@ export default function Oath() {
   const [onlyIncreasing, setOnlyIncreasing] = useState(false);
   const [requireTouch, setRequireTouch] = useState(false);
 
-  function isOldProtocol(firmwareVersion) {
-    return firmwareVersion < "1.5";
-  }
-
-  async function doList() {
+  const doList = useCallback(async () => {
     let cmd = isOldProtocol(firmwareVersion) ? '0003000000' : '00A1000000';
     let res = await dispatch(transceive(cmd, false, true));
     if (!res.endsWith("9000")) {
@@ -169,7 +169,7 @@ export default function Oath() {
       }
     }
     setEntries(entries);
-  }
+  }, [firmwareVersion]);
 
   const doAuthenticate = useCallback(async () => {
     const key = await pbkdf2Hmac(passphrase, hexStringToByte(salt.current), 1000, 16, 'SHA-1');
@@ -229,7 +229,7 @@ export default function Oath() {
     } else {
       setAuthenticated(true);
     }
-  }, [device, dispatch, setPassphraseDialogOpen, setAuthenticated, setFirmwareVersion, firmwareVersion]);
+  }, [device, dispatch]);
 
   const fetchEntries = useCallback(() => {
     setAuthenticated(false); // Reset authenticated state
