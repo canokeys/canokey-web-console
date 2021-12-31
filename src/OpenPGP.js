@@ -1699,10 +1699,10 @@ export default function OpenPGP() {
           setChMKDialogOpen(false)
         }}
       >
-        <DialogTitle> Enter new ManagementKey for PIV Applet</DialogTitle>
+        <DialogTitle> Enter new ManagementKey for OpenPGP Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter new ManagementKey for PIV Applet.
+            Enter new ManagementKey for OpenPGP Applet.
           </DialogContentText>
           <TextField
             error={!newMKValid}
@@ -1750,7 +1750,7 @@ export default function OpenPGP() {
         open={creatKeyDialogOpen}
         onClose={() => setCreatKeyDialogOpen(false)}
       >
-        <DialogTitle>Creat crt to PIV Applet</DialogTitle>
+        <DialogTitle>Creat crt to OpenPGP Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>Set key and crt info below</DialogContentText>
           <FormGroup col>
