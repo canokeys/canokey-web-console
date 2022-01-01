@@ -1249,14 +1249,14 @@ export default function OpenPGP() {
   const onChangeSigTouch = useCallback(async (e) => {
     let touch = e.target.checked
     if (touch) {
-      let res = await dispatch(transceive(`00DA00D60100`))
+      let res = await dispatch(transceive(`00DA00D6020100`))
       if (res.endsWith('9000')) {
         enqueueSnackbar('Signature touch enabled', {variant: 'success'})
       } else {
         enqueueSnackbar('Change signature touch failed', {variant: 'error'})
       }
     } else {
-      let res = await dispatch(transceive(`00DA00D60000`))
+      let res = await dispatch(transceive(`00DA00D6020000`))
       if (res.endsWith('9000')) {
         enqueueSnackbar('Signature touch disabled', {variant: 'success'})
       } else {
@@ -1269,14 +1269,14 @@ export default function OpenPGP() {
   const onChangeDecTouch = useCallback(async (e) => {
     let touch = e.target.checked
     if (touch) {
-      let res = await dispatch(transceive(`00DA00D70100`))
+      let res = await dispatch(transceive(`00DA00D7020100`))
       if (res.endsWith('9000')) {
         enqueueSnackbar('Decryption touch enabled', {variant: 'success'})
       } else {
         enqueueSnackbar('Change decryption touch failed', {variant: 'error'})
       }
     } else {
-      let res = await dispatch(transceive(`00DA00D70000`))
+      let res = await dispatch(transceive(`00DA00D7020000`))
       if (res.endsWith('9000')) {
         enqueueSnackbar('Decryption touch disabled', {variant: 'success'})
       } else {
@@ -1289,14 +1289,14 @@ export default function OpenPGP() {
   const onChangeAutTouch = useCallback(async (e) => {
     let touch = e.target.checked
     if (touch) {
-      let res = await dispatch(transceive(`00DA00D80100`))
+      let res = await dispatch(transceive(`00DA00D8020100`))
       if (res.endsWith('9000')) {
         enqueueSnackbar('Authentication touch enabled', {variant: 'success'})
       } else {
         enqueueSnackbar('Change authentication touch failed', {variant: 'error'})
       }
     } else {
-      let res = await dispatch(transceive(`00DA00D80000`))
+      let res = await dispatch(transceive(`00DA00D8020000`))
       if (res.endsWith('9000')) {
         enqueueSnackbar('Authentication touch disabled', {variant: 'success'})
       } else {
