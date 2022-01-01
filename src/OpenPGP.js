@@ -1563,7 +1563,7 @@ export default function OpenPGP() {
                     onClick={onChangeMK}
                     className={classes.button}
                   >
-                    change managementkey
+                    change admin pin
                   </Button>
                 </span>
               ) : null}

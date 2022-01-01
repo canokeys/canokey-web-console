@@ -803,7 +803,7 @@ export default function Piv() {
           <Card className={classes.card}>
             <CardContent>
               <Typography variant="h3">Password Management</Typography>
-              <Typography>Manage PIV PIN and ManagementKey.</Typography>
+              <Typography>Manage PIV PIN and Management Key.</Typography>
             </CardContent>
             <CardActions>
               <Button
@@ -828,7 +828,7 @@ export default function Piv() {
                     onClick={onChangeMK}
                     className={classes.button}
                   >
-                    change managementkey
+                    change management key
                   </Button>
                 </span>
               ) : null}
@@ -843,7 +843,7 @@ export default function Piv() {
         <DialogTitle> Enter PIN and MK to Authenticate</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter PIN and ManagementKey below.Please be aware of PIN retry
+            Enter PIN and Management Key below.Please be aware of PIN retry
             count. This will not be stored in browser.
           </DialogContentText>
           <TextField
@@ -864,7 +864,7 @@ export default function Piv() {
           />
           <TextField
             error={!nowMKValid}
-            label="ManagementKey"
+            label="Management Key"
             type="password"
             fullWidth
             onKeyPress={onKeyPressMKAuthen}
@@ -930,10 +930,10 @@ export default function Piv() {
           setStopRefresh(false)
         }}
       >
-        <DialogTitle> Enter new ManagementKey for PIV Applet</DialogTitle>
+        <DialogTitle> Enter new Management Key for PIV Applet</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter new ManagementKey for PIV Applet.
+            Enter new Management Key for PIV Applet.
           </DialogContentText>
           <TextField
             error={!newMKValid}
