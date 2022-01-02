@@ -1590,7 +1590,7 @@ export default function OpenPGP() {
             onKeyPress={onKeyPressMKAuthen}
             onChange={(e) => {
               setOldPin(e.target.value)
-              if (/^[A-Za-z0-9]{6,64}$/.test(e.target.value)) {
+              if (/^[^-~]{6,64}$/.test(e.target.value)) {
                 setOldPinValid(true)
               } else {
                 setOldPinValid(false)
@@ -1605,7 +1605,7 @@ export default function OpenPGP() {
             onKeyPress={onKeyPressMKAuthen}
             onChange={(e) => {
               setNowMK(e.target.value)
-              if (/^[A-Za-z0-9]{8,64}$/.test(e.target.value)) {
+              if (/^[^-~]{8,64}$/.test(e.target.value)) {
                 setNowMKValid(true)
               } else {
                 setNowMKValid(false)
