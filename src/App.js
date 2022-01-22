@@ -160,10 +160,6 @@ export default function App() {
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>OATH</ListItemText>
               </ListItem>
-              <ListItem button onClick={showOpenPGP} className={classes.nested}>
-                <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
-                <ListItemText>OpenPGP</ListItemText>
-              </ListItem>
               <ListItem button onClick={showPIV} className={classes.nested}>
                 <ListItemIcon><ArrowForwardIcon/></ListItemIcon>
                 <ListItemText>PIV</ListItemText>
